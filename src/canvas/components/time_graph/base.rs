@@ -108,7 +108,10 @@ impl TimeGraph<'_> {
             let x_bound_right = "0s";
 
             let x_labels = vec![
-                Span::styled(concat_string!(x_bound_left, "s"), self.graph_style),
+                Span::styled(
+                    concat_string!(x_bound_left, "s"),
+                    self.graph_style,
+                ),
                 Span::styled(x_bound_right, self.graph_style),
             ];
 
@@ -141,7 +144,10 @@ impl TimeGraph<'_> {
     ///   graph.
     /// - Expects `graph_data`, which represents *what* data to draw, and
     ///   various details like style and optional legends.
-    pub fn draw(&self, f: &mut Frame<'_>, draw_loc: Rect, graph_data: Vec<GraphData<'_>>) {
+    pub fn draw(
+        &self, f: &mut Frame<'_>, draw_loc: Rect,
+        graph_data: Vec<GraphData<'_>>,
+    ) {
         // TODO: (points_rework_v1) can we reduce allocations in the underlying graph by saving some sort of state?
 
         let x_axis = self.generate_x_axis();
@@ -154,7 +160,10 @@ impl TimeGraph<'_> {
                 .title_top(Line::styled(self.title.as_ref(), self.title_style));
 
             if self.is_expanded {
-                b = b.title_top(Line::styled(" Esc to go back ", self.title_style).right_aligned())
+                b = b.title_top(
+                    Line::styled(" Esc to go back ", self.title_style)
+                        .right_aligned(),
+                )
             }
 
             b

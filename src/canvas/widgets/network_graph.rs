@@ -12,7 +12,9 @@ use crate::{
     app::{App, AppConfigFields, AxisScaling},
     canvas::{
         Painter,
-        components::time_graph::{AxisBound, ChartScaling, GraphData, TimeGraph},
+        components::time_graph::{
+            AxisBound, ChartScaling, GraphData, TimeGraph,
+        },
         drawing_utils::should_hide_x_label,
     },
     utils::{
@@ -24,7 +26,8 @@ use crate::{
 
 impl Painter {
     pub fn draw_network(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
         if app_state.app_config_fields.use_old_network_legend {
             const LEGEND_HEIGHT: u16 = 4;
@@ -32,12 +35,20 @@ impl Painter {
                 .direction(Direction::Vertical)
                 .margin(0)
                 .constraints([
-                    Constraint::Length(draw_loc.height.saturating_sub(LEGEND_HEIGHT)),
+                    Constraint::Length(
+                        draw_loc.height.saturating_sub(LEGEND_HEIGHT),
+                    ),
                     Constraint::Length(LEGEND_HEIGHT),
                 ])
                 .split(draw_loc);
 
-            self.draw_network_graph(f, app_state, network_chunk[0], widget_id, true);
+            self.draw_network_graph(
+                f,
+                app_state,
+                network_chunk[0],
+                widget_id,
+                true,
+            );
             self.draw_network_labels(f, app_state, network_chunk[1], widget_id);
         } else {
             self.draw_network_graph(f, app_state, draw_loc, widget_id, false);
@@ -47,17 +58,21 @@ impl Painter {
             // Update draw loc in widget map
             // Note that in both cases, we always go to the same widget id so it's fine to
             // do it like this lol.
-            if let Some(network_widget) = app_state.widget_map.get_mut(&widget_id) {
+            if let Some(network_widget) =
+                app_state.widget_map.get_mut(&widget_id)
+            {
                 network_widget.top_left_corner = Some((draw_loc.x, draw_loc.y));
-                network_widget.bottom_right_corner =
-                    Some((draw_loc.x + draw_loc.width, draw_loc.y + draw_loc.height));
+                network_widget.bottom_right_corner = Some((
+                    draw_loc.x + draw_loc.width,
+                    draw_loc.y + draw_loc.height,
+                ));
             }
         }
     }
 
     pub fn draw_network_graph(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
-        full_screen: bool,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64, full_screen: bool,
     ) {
         if let Some(network_widget_state) =
             app_state.states.net_state.widget_states.get_mut(&widget_id)
@@ -67,9 +82,13 @@ impl Painter {
             let rx_points = &(shared_data.timeseries_data.rx);
             let tx_points = &(shared_data.timeseries_data.tx);
             let times = &(shared_data.timeseries_data.time);
-            let time_start = -(network_widget_state.current_display_time as f64);
+            let time_start =
+                -(network_widget_state.current_display_time as f64);
 
-            let border_style = self.get_border_style(widget_id, app_state.current_widget.widget_id);
+            let border_style = self.get_border_style(
+                widget_id,
+                app_state.current_widget.widget_id,
+            );
             let hide_x_labels = should_hide_x_label(
                 app_state.app_config_fields.hide_time,
                 app_state.app_config_fields.autohide_time,
@@ -79,33 +98,38 @@ impl Painter {
 
             let y_max = {
                 if let Some(last_time) = times.last() {
-                    let cached_network_height =
-                        check_network_height_cache(network_widget_state, last_time);
+                    let cached_network_height = check_network_height_cache(
+                        network_widget_state,
+                        last_time,
+                    );
 
-                    let (mut biggest, mut biggest_time, oldest_to_check) = cached_network_height
-                        .unwrap_or_else(|| {
-                            let visible_duration =
-                                Duration::from_millis(network_widget_state.current_display_time);
+                    let (mut biggest, mut biggest_time, oldest_to_check) =
+                        cached_network_height.unwrap_or_else(|| {
+                            let visible_duration = Duration::from_millis(
+                                network_widget_state.current_display_time,
+                            );
 
-                            let visible_left_bound = match last_time.checked_sub(visible_duration) {
-                                Some(v) => v,
-                                None => {
-                                    // On some systems (like Windows) it can be possible that the current display time
-                                    // causes subtraction to fail if, for example, the uptime of the system is too low
-                                    // and current_display_time is too high. See https://github.com/ClementTsang/bottom/issues/1825.
-                                    //
-                                    // As such, we instead take the oldest visible time. This is a bit inefficient, but
-                                    // since it should only happen rarely, it should be fine.
-                                    times
-                                        .iter()
-                                        .take_while(|t| {
-                                            last_time.duration_since(**t) < visible_duration
-                                        })
-                                        .last()
-                                        .cloned()
-                                        .unwrap_or(*last_time)
-                                }
-                            };
+                            let visible_left_bound =
+                                match last_time.checked_sub(visible_duration) {
+                                    Some(v) => v,
+                                    None => {
+                                        // On some systems (like Windows) it can be possible that the current display time
+                                        // causes subtraction to fail if, for example, the uptime of the system is too low
+                                        // and current_display_time is too high. See https://github.com/ClementTsang/bottom/issues/1825.
+                                        //
+                                        // As such, we instead take the oldest visible time. This is a bit inefficient, but
+                                        // since it should only happen rarely, it should be fine.
+                                        times
+                                            .iter()
+                                            .take_while(|t| {
+                                                last_time.duration_since(**t)
+                                                    < visible_duration
+                                            })
+                                            .last()
+                                            .cloned()
+                                            .unwrap_or(*last_time)
+                                    }
+                                };
 
                             (0.0, visible_left_bound, visible_left_bound)
                         });
@@ -132,11 +156,12 @@ impl Painter {
                         }
                     }
 
-                    network_widget_state.height_cache = Some(NetWidgetHeightCache {
-                        best_point: (biggest_time, biggest),
-                        right_edge: *last_time,
-                        period: network_widget_state.current_display_time,
-                    });
+                    network_widget_state.height_cache =
+                        Some(NetWidgetHeightCache {
+                            best_point: (biggest_time, biggest),
+                            right_edge: *last_time,
+                            period: network_widget_state.current_display_time,
+                        });
 
                     biggest
                 } else {
@@ -155,7 +180,8 @@ impl Painter {
 
             // TODO: Add support for clicking on legend to only show that value on chart.
 
-            let use_binary_prefix = app_state.app_config_fields.network_use_binary_prefix;
+            let use_binary_prefix =
+                app_state.app_config_fields.network_use_binary_prefix;
             let unit_type = app_state.app_config_fields.network_unit_type;
             let unit = match unit_type {
                 DataUnit::Byte => "B/s",
@@ -164,16 +190,24 @@ impl Painter {
 
             let rx = get_unit_prefix(network_latest_data.rx, use_binary_prefix);
             let tx = get_unit_prefix(network_latest_data.tx, use_binary_prefix);
-            let total_rx = convert_bits(network_latest_data.total_rx, use_binary_prefix);
-            let total_tx = convert_bits(network_latest_data.total_tx, use_binary_prefix);
+            let total_rx =
+                convert_bits(network_latest_data.total_rx, use_binary_prefix);
+            let total_tx =
+                convert_bits(network_latest_data.total_tx, use_binary_prefix);
 
             // TODO: This behaviour is pretty weird, we should probably just make it so if you use old network legend
             // you don't do whatever this is...
-            let graph_data = if app_state.app_config_fields.use_old_network_legend && !full_screen {
+            let graph_data = if app_state
+                .app_config_fields
+                .use_old_network_legend
+                && !full_screen
+            {
                 let rx_label = format!("RX: {:.1}{}{}", rx.0, rx.1, unit);
                 let tx_label = format!("TX: {:.1}{}{}", tx.0, tx.1, unit);
-                let total_rx_label = format!("Total RX: {:.1}{}", total_rx.0, total_rx.1);
-                let total_tx_label = format!("Total TX: {:.1}{}", total_tx.0, total_tx.1);
+                let total_rx_label =
+                    format!("Total RX: {:.1}{}", total_rx.0, total_rx.1);
+                let total_tx_label =
+                    format!("Total TX: {:.1}{}", total_tx.0, total_tx.1);
 
                 vec![
                     GraphData::default()
@@ -201,12 +235,22 @@ impl Painter {
 
                 vec![
                     GraphData::default()
-                        .name(format!("RX: {rx_label:<10}  All: {total_rx_label}").into())
+                        .name(
+                            format!(
+                                "RX: {rx_label:<10}  All: {total_rx_label}"
+                            )
+                            .into(),
+                        )
                         .time(times)
                         .values(rx_points)
                         .style(self.styles.rx_style),
                     GraphData::default()
-                        .name(format!("TX: {tx_label:<10}  All: {total_tx_label}").into())
+                        .name(
+                            format!(
+                                "TX: {tx_label:<10}  All: {total_tx_label}"
+                            )
+                            .into(),
+                        )
                         .time(times)
                         .values(tx_points)
                         .style(self.styles.tx_style),
@@ -235,7 +279,10 @@ impl Painter {
                 x_min: time_start,
                 hide_x_labels,
                 y_bounds,
-                y_labels: &(y_labels.into_iter().map(Into::into).collect::<Vec<_>>()),
+                y_labels: &(y_labels
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<_>>()),
                 graph_style: self.styles.graph_style,
                 border_style,
                 border_type: self.styles.border_type,
@@ -243,7 +290,9 @@ impl Painter {
                 is_selected: app_state.current_widget.widget_id == widget_id,
                 is_expanded: app_state.is_expanded,
                 title_style: self.styles.widget_title_style,
-                legend_position: app_state.app_config_fields.network_legend_position,
+                legend_position: app_state
+                    .app_config_fields
+                    .network_legend_position,
                 legend_constraints: Some(legend_constraints),
                 marker,
                 scaling,
@@ -253,12 +302,15 @@ impl Painter {
     }
 
     fn draw_network_labels(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
         const NETWORK_HEADERS: [&str; 4] = ["RX", "TX", "Total RX", "Total TX"];
 
-        let network_latest_data = &(app_state.data_store.get_data().network_harvest);
-        let use_binary_prefix = app_state.app_config_fields.network_use_binary_prefix;
+        let network_latest_data =
+            &(app_state.data_store.get_data().network_harvest);
+        let use_binary_prefix =
+            app_state.app_config_fields.network_use_binary_prefix;
         let unit_type = app_state.app_config_fields.network_unit_type;
         let unit = match unit_type {
             DataUnit::Byte => "B/s",
@@ -271,8 +323,10 @@ impl Painter {
         let rx_label = format!("{:.1}{}{}", rx.0, rx.1, unit);
         let tx_label = format!("{:.1}{}{}", tx.0, tx.1, unit);
 
-        let total_rx = convert_bits(network_latest_data.total_rx, use_binary_prefix);
-        let total_tx = convert_bits(network_latest_data.total_tx, use_binary_prefix);
+        let total_rx =
+            convert_bits(network_latest_data.total_rx, use_binary_prefix);
+        let total_tx =
+            convert_bits(network_latest_data.total_tx, use_binary_prefix);
         let total_rx_label = format!("{:.1}{}", total_rx.0, total_rx.1);
         let total_tx_label = format!("{:.1}{}", total_tx.0, total_tx.1);
 
@@ -293,7 +347,9 @@ impl Painter {
                     .map(Constraint::Length)
                     .collect::<Vec<_>>()),
             )
-            .header(Row::new(NETWORK_HEADERS).style(self.styles.table_header_style))
+            .header(
+                Row::new(NETWORK_HEADERS).style(self.styles.table_header_style),
+            )
             .block(Block::default().borders(Borders::ALL).border_style(
                 if app_state.current_widget.widget_id == widget_id {
                     self.styles.highlighted_border_style
@@ -312,7 +368,8 @@ impl Painter {
 fn check_network_height_cache(
     network_widget_state: &NetWidgetState, last_time: &std::time::Instant,
 ) -> Option<(f64, std::time::Instant, std::time::Instant)> {
-    let visible_duration = Duration::from_millis(network_widget_state.current_display_time);
+    let visible_duration =
+        Duration::from_millis(network_widget_state.current_display_time);
 
     if let Some(NetWidgetHeightCache {
         best_point,
@@ -334,7 +391,9 @@ fn check_network_height_cache(
 ///
 /// TODO: This is _really_ ugly... also there might be a bug with certain heights and too many labels.
 /// We may need to take draw height into account, either here, or in the time graph itself.
-fn adjust_network_data_point(max_entry: f64, config: &AppConfigFields) -> (f64, Vec<String>) {
+fn adjust_network_data_point(
+    max_entry: f64, config: &AppConfigFields,
+) -> (f64, Vec<String>) {
     // So, we're going with an approach like this for linear data:
     // - Main goal is to maximize the amount of information displayed given a
     //   specific height. We don't want to drown out some data if the ranges are too
@@ -461,7 +520,9 @@ fn adjust_network_data_point(max_entry: f64, config: &AppConfigFields) -> (f64, 
                 saturating_log10(max_entry)
             };
 
-            fn get_zero(network_use_binary_prefix: bool, unit_char: &str) -> String {
+            fn get_zero(
+                network_use_binary_prefix: bool, unit_char: &str,
+            ) -> String {
                 format!(
                     "{}0{}",
                     if network_use_binary_prefix { "  " } else { " " },
@@ -469,7 +530,9 @@ fn adjust_network_data_point(max_entry: f64, config: &AppConfigFields) -> (f64, 
                 )
             }
 
-            fn get_k(network_use_binary_prefix: bool, unit_char: &str) -> String {
+            fn get_k(
+                network_use_binary_prefix: bool, unit_char: &str,
+            ) -> String {
                 format!(
                     "1{}{}",
                     if network_use_binary_prefix { "Ki" } else { "K" },
@@ -477,7 +540,9 @@ fn adjust_network_data_point(max_entry: f64, config: &AppConfigFields) -> (f64, 
                 )
             }
 
-            fn get_m(network_use_binary_prefix: bool, unit_char: &str) -> String {
+            fn get_m(
+                network_use_binary_prefix: bool, unit_char: &str,
+            ) -> String {
                 format!(
                     "1{}{}",
                     if network_use_binary_prefix { "Mi" } else { "M" },
@@ -485,7 +550,9 @@ fn adjust_network_data_point(max_entry: f64, config: &AppConfigFields) -> (f64, 
                 )
             }
 
-            fn get_g(network_use_binary_prefix: bool, unit_char: &str) -> String {
+            fn get_g(
+                network_use_binary_prefix: bool, unit_char: &str,
+            ) -> String {
                 format!(
                     "1{}{}",
                     if network_use_binary_prefix { "Gi" } else { "G" },
@@ -493,7 +560,9 @@ fn adjust_network_data_point(max_entry: f64, config: &AppConfigFields) -> (f64, 
                 )
             }
 
-            fn get_t(network_use_binary_prefix: bool, unit_char: &str) -> String {
+            fn get_t(
+                network_use_binary_prefix: bool, unit_char: &str,
+            ) -> String {
                 format!(
                     "1{}{}",
                     if network_use_binary_prefix { "Ti" } else { "T" },
@@ -501,7 +570,9 @@ fn adjust_network_data_point(max_entry: f64, config: &AppConfigFields) -> (f64, 
                 )
             }
 
-            fn get_p(network_use_binary_prefix: bool, unit_char: &str) -> String {
+            fn get_p(
+                network_use_binary_prefix: bool, unit_char: &str,
+            ) -> String {
                 format!(
                     "1{}{}",
                     if network_use_binary_prefix { "Pi" } else { "P" },

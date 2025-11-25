@@ -5,9 +5,9 @@ use windows::{
     Win32::{
         Foundation::ERROR_SUCCESS,
         System::Performance::{
-            PDH_FMT_COUNTERVALUE, PDH_FMT_DOUBLE, PDH_HCOUNTER, PDH_HQUERY, PdhAddEnglishCounterW,
-            PdhCloseQuery, PdhCollectQueryData, PdhGetFormattedCounterValue, PdhOpenQueryW,
-            PdhRemoveCounter,
+            PDH_FMT_COUNTERVALUE, PDH_FMT_DOUBLE, PDH_HCOUNTER, PDH_HQUERY,
+            PdhAddEnglishCounterW, PdhCloseQuery, PdhCollectQueryData,
+            PdhGetFormattedCounterValue, PdhOpenQueryW, PdhRemoveCounter,
         },
     },
     core::w,
@@ -42,7 +42,9 @@ pub(crate) fn get_swap_usage(sys: &System) -> Option<MemData> {
             return None;
         }
 
-        if PdhAddEnglishCounterW(query_handle, query, 0, &mut counter_handle) != ERROR_SUCCESS.0 {
+        if PdhAddEnglishCounterW(query_handle, query, 0, &mut counter_handle)
+            != ERROR_SUCCESS.0
+        {
             return None;
         }
 
@@ -51,8 +53,12 @@ pub(crate) fn get_swap_usage(sys: &System) -> Option<MemData> {
             return None;
         }
 
-        if PdhGetFormattedCounterValue(counter_handle, PDH_FMT_DOUBLE, None, &mut counter_value)
-            != ERROR_SUCCESS.0
+        if PdhGetFormattedCounterValue(
+            counter_handle,
+            PDH_FMT_DOUBLE,
+            None,
+            &mut counter_value,
+        ) != ERROR_SUCCESS.0
         {
             // If we fail, still clean up.
             PdhCloseQuery(query_handle);
@@ -65,7 +71,8 @@ pub(crate) fn get_swap_usage(sys: &System) -> Option<MemData> {
         PdhRemoveCounter(counter_handle);
         PdhCloseQuery(query_handle);
 
-        let used_bytes = (total_bytes.get() as f64 / 100.0 * use_percentage) as u64;
+        let used_bytes =
+            (total_bytes.get() as f64 / 100.0 * use_percentage) as u64;
         Some(MemData {
             used_bytes,
             total_bytes,
@@ -82,7 +89,8 @@ mod tests {
     #[test]
     fn test_windows_get_swap_usage() {
         let sys = System::new_with_specifics(
-            RefreshKind::nothing().with_memory(MemoryRefreshKind::nothing().with_swap()),
+            RefreshKind::nothing()
+                .with_memory(MemoryRefreshKind::nothing().with_swap()),
         );
 
         let swap_usage = get_swap_usage(&sys);

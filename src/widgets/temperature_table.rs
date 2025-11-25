@@ -3,8 +3,9 @@ use std::{borrow::Cow, cmp::max, num::NonZeroU16};
 use crate::{
     app::{AppConfigFields, data::TypedTemperature},
     canvas::components::data_table::{
-        ColumnHeader, DataTableColumn, DataTableProps, DataTableStyling, DataToCell, SortColumn,
-        SortDataTable, SortDataTableProps, SortOrder, SortsRow,
+        ColumnHeader, DataTableColumn, DataTableProps, DataTableStyling,
+        DataToCell, SortColumn, SortDataTable, SortDataTableProps, SortOrder,
+        SortsRow,
     },
     options::config::style::Styles,
     utils::general::sort_partial_fn,
@@ -72,10 +73,14 @@ impl SortsRow for TempWidgetColumn {
     fn sort_data(&self, data: &mut [Self::DataType], descending: bool) {
         match self {
             TempWidgetColumn::Sensor => {
-                data.sort_by(move |a, b| sort_partial_fn(descending)(&a.sensor, &b.sensor));
+                data.sort_by(move |a, b| {
+                    sort_partial_fn(descending)(&a.sensor, &b.sensor)
+                });
             }
             TempWidgetColumn::Temp => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.temperature, &b.temperature));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.temperature, &b.temperature)
+                });
             }
         }
     }

@@ -25,7 +25,9 @@ fn run_and_kill(args: &[&str]) {
         match handle.try_wait() {
             Ok(Some(exit)) => {
                 println!("output: {}", reader_to_string(reader));
-                panic!("program terminated unexpectedly (exit status: {exit:?})");
+                panic!(
+                    "program terminated unexpectedly (exit status: {exit:?})"
+                );
             }
             Err(e) => {
                 println!("output: {}", reader_to_string(reader));
@@ -70,7 +72,9 @@ fn test_uncommented_default_config(original: &Path, test_name: &str) {
             buf
         }
         Err(err) => {
-            println!("Could not open default config, skipping {test_name}. Error: {err:?}");
+            println!(
+                "Could not open default config, skipping {test_name}. Error: {err:?}"
+            );
             return;
         }
     };
@@ -86,13 +90,17 @@ fn test_uncommented_default_config(original: &Path, test_name: &str) {
     let mut uncommented_config = match tempfile::NamedTempFile::new() {
         Ok(tf) => tf,
         Err(err) => {
-            println!("Could not create a temp file, skipping {test_name}. Error: {err:?}");
+            println!(
+                "Could not create a temp file, skipping {test_name}. Error: {err:?}"
+            );
             return;
         }
     };
 
     if let Err(err) = uncommented_config.write_all(default_config.as_bytes()) {
-        println!("Could not write to temp file, skipping {test_name}. Error: {err:?}");
+        println!(
+            "Could not write to temp file, skipping {test_name}. Error: {err:?}"
+        );
         return;
     }
 
@@ -118,7 +126,9 @@ fn test_new_default() {
     let new_temp_default_path = match tempfile::NamedTempFile::new() {
         Ok(temp_file) => temp_file.into_temp_path(),
         Err(err) => {
-            println!("Could not create a temp file, skipping test_new_default. Error: {err:?}");
+            println!(
+                "Could not create a temp file, skipping test_new_default. Error: {err:?}"
+            );
             return;
         }
     };
@@ -131,12 +141,18 @@ fn test_new_default() {
         run_and_kill(&["-C", &(actual_temp_default_path.to_string_lossy())]);
 
         // Re-take control over the temp path to ensure it gets deleted.
-        let actual_temp_default_path = TempPath::from_path(actual_temp_default_path);
-        test_uncommented_default_config(&actual_temp_default_path, "test_new_default");
+        let actual_temp_default_path =
+            TempPath::from_path(actual_temp_default_path);
+        test_uncommented_default_config(
+            &actual_temp_default_path,
+            "test_new_default",
+        );
 
         actual_temp_default_path.close().unwrap();
     } else {
-        println!("temp path we want to check exists, skip test_new_default test.");
+        println!(
+            "temp path we want to check exists, skip test_new_default test."
+        );
     }
 }
 

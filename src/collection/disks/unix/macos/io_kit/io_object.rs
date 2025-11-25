@@ -7,8 +7,8 @@ use anyhow::{anyhow, bail};
 use core_foundation::{
     base::{CFType, TCFType, ToVoid, kCFAllocatorDefault},
     dictionary::{
-        CFDictionary, CFDictionaryGetTypeID, CFDictionaryRef, CFMutableDictionary,
-        CFMutableDictionaryRef,
+        CFDictionary, CFDictionaryGetTypeID, CFDictionaryRef,
+        CFMutableDictionary, CFMutableDictionaryRef,
     },
     number::{CFNumber, CFNumberGetTypeID},
     string::{CFString, CFStringGetTypeID},
@@ -28,7 +28,8 @@ impl IoObject {
         // `assume_init` should also be fine, as we guard against it with a
         // check against `result` to ensure it succeeded.
         unsafe {
-            let mut props = mem::MaybeUninit::<CFMutableDictionaryRef>::uninit();
+            let mut props =
+                mem::MaybeUninit::<CFMutableDictionaryRef>::uninit();
 
             let result = IORegistryEntryCreateCFProperties(
                 self.0,
@@ -38,10 +39,13 @@ impl IoObject {
             );
 
             if result != kern_return::KERN_SUCCESS {
-                bail!("IORegistryEntryCreateCFProperties failed, error code {result}.")
+                bail!(
+                    "IORegistryEntryCreateCFProperties failed, error code {result}."
+                )
             } else {
                 let props = props.assume_init();
-                Ok(CFMutableDictionary::wrap_under_create_rule(props).to_immutable())
+                Ok(CFMutableDictionary::wrap_under_create_rule(props)
+                    .to_immutable())
             }
         }
     }
@@ -53,7 +57,11 @@ impl IoObject {
 
         // SAFETY: IOKit call, the arguments should be safe.
         let result = unsafe {
-            IORegistryEntryGetParentEntry(self.0, kIOServicePlane.as_ptr().cast(), &mut parent)
+            IORegistryEntryGetParentEntry(
+                self.0,
+                kIOServicePlane.as_ptr().cast(),
+                &mut parent,
+            )
         };
 
         if result != kern_return::KERN_SUCCESS {

@@ -30,11 +30,15 @@ impl TemperatureType {
     /// unit.
     pub fn convert_temp_unit(&self, celsius: f32) -> TypedTemperature {
         match self {
-            TemperatureType::Celsius => TypedTemperature::Celsius(celsius.ceil() as u32),
-            TemperatureType::Kelvin => TypedTemperature::Kelvin((celsius + 273.15).ceil() as u32),
-            TemperatureType::Fahrenheit => {
-                TypedTemperature::Fahrenheit(((celsius * (9.0 / 5.0)) + 32.0).ceil() as u32)
+            TemperatureType::Celsius => {
+                TypedTemperature::Celsius(celsius.ceil() as u32)
             }
+            TemperatureType::Kelvin => {
+                TypedTemperature::Kelvin((celsius + 273.15).ceil() as u32)
+            }
+            TemperatureType::Fahrenheit => TypedTemperature::Fahrenheit(
+                ((celsius * (9.0 / 5.0)) + 32.0).ceil() as u32,
+            ),
         }
     }
 }

@@ -14,7 +14,9 @@ use process::*;
 use sysinfo::ProcessStatus;
 
 use super::{Pid, ProcessHarvest, UserTable, process_status_str};
-use crate::collection::{DataCollector, error::CollectionResult, processes::ProcessType};
+use crate::collection::{
+    DataCollector, error::CollectionResult, processes::ProcessType,
+};
 
 /// Maximum character length of a `/proc/<PID>/stat` process name (the length is 16,
 /// but this includes a null terminator).
@@ -133,8 +135,8 @@ fn get_linux_cpu_usage(
 }
 
 fn read_proc(
-    prev_proc: &PrevProcDetails, process: Process, args: ReadProcArgs, user_table: &mut UserTable,
-    thread_parent: Option<Pid>,
+    prev_proc: &PrevProcDetails, process: Process, args: ReadProcArgs,
+    user_table: &mut UserTable, thread_parent: Option<Pid>,
 ) -> CollectionResult<(ProcessHarvest, u64)> {
     let Process {
         pid: _pid,
@@ -167,7 +169,8 @@ fn read_proc(
         use_current_cpu_total,
     );
 
-    let (parent_pid, process_type) = if let Some(thread_parent) = thread_parent {
+    let (parent_pid, process_type) = if let Some(thread_parent) = thread_parent
+    {
         (Some(thread_parent), ProcessType::ProcessThread)
     } else if stat.is_kernel_thread {
         (Some(stat.ppid), ProcessType::Kernel)
@@ -176,39 +179,44 @@ fn read_proc(
     };
 
     let mem_usage = stat.rss_bytes();
-    let mem_usage_percent = (mem_usage as f64 / total_memory as f64 * 100.0) as f32;
+    let mem_usage_percent =
+        (mem_usage as f64 / total_memory as f64 * 100.0) as f32;
     let virtual_mem = stat.vsize;
 
     // XXX: This can fail if permission is denied.
-    let (total_read, total_write, read_per_sec, write_per_sec) = if let Some(io) = io {
-        let total_read = io.read_bytes;
-        let total_write = io.write_bytes;
-        let prev_total_read = prev_proc.total_read_bytes;
-        let prev_total_write = prev_proc.total_write_bytes;
+    let (total_read, total_write, read_per_sec, write_per_sec) =
+        if let Some(io) = io {
+            let total_read = io.read_bytes;
+            let total_write = io.write_bytes;
+            let prev_total_read = prev_proc.total_read_bytes;
+            let prev_total_write = prev_proc.total_write_bytes;
 
-        let read_per_sec = total_read
-            .saturating_sub(prev_total_read)
-            .checked_div(time_difference_in_secs)
-            .unwrap_or(0);
+            let read_per_sec = total_read
+                .saturating_sub(prev_total_read)
+                .checked_div(time_difference_in_secs)
+                .unwrap_or(0);
 
-        let write_per_sec = total_write
-            .saturating_sub(prev_total_write)
-            .checked_div(time_difference_in_secs)
-            .unwrap_or(0);
+            let write_per_sec = total_write
+                .saturating_sub(prev_total_write)
+                .checked_div(time_difference_in_secs)
+                .unwrap_or(0);
 
-        (total_read, total_write, read_per_sec, write_per_sec)
-    } else {
-        (0, 0, 0, 0)
-    };
+            (total_read, total_write, read_per_sec, write_per_sec)
+        } else {
+            (0, 0, 0, 0)
+        };
 
     let user = uid.and_then(|uid| user_table.uid_to_username(uid).ok());
 
-    let time = if let Ok(ticks_per_sec) = u32::try_from(rustix::param::clock_ticks_per_second()) {
+    let time = if let Ok(ticks_per_sec) =
+        u32::try_from(rustix::param::clock_ticks_per_second())
+    {
         if ticks_per_sec == 0 {
             Duration::ZERO
         } else {
             Duration::from_secs(
-                system_uptime.saturating_sub(stat.start_time / ticks_per_sec as u64),
+                system_uptime
+                    .saturating_sub(stat.start_time / ticks_per_sec as u64),
             )
         }
     } else {
@@ -415,16 +423,23 @@ pub(crate) fn linux_process_data(
 
     let mut process_vector: Vec<ProcessHarvest> = pids
         .filter_map(|pid_path| {
-            if let Ok((process, threads)) =
-                Process::from_path(pid_path, &mut buffer, args.get_process_threads)
-            {
+            if let Ok((process, threads)) = Process::from_path(
+                pid_path,
+                &mut buffer,
+                args.get_process_threads,
+            ) {
                 let pid = process.pid;
-                let prev_proc_details = prev_process_details.entry(pid).or_default();
+                let prev_proc_details =
+                    prev_process_details.entry(pid).or_default();
 
                 #[cfg_attr(not(feature = "gpu"), expect(unused_mut))]
-                if let Ok((mut process_harvest, new_process_times)) =
-                    read_proc(prev_proc_details, process, args, user_table, None)
-                {
+                if let Ok((mut process_harvest, new_process_times)) = read_proc(
+                    prev_proc_details,
+                    process,
+                    args,
+                    user_table,
+                    None,
+                ) {
                     #[cfg(feature = "gpu")]
                     if let Some(gpus) = &collector.gpu_pids {
                         gpus.iter().for_each(|gpu| {
@@ -436,14 +451,18 @@ pub(crate) fn linux_process_data(
                         });
                         if let Some(gpu_total_mem) = &collector.gpus_total_mem {
                             process_harvest.gpu_mem_percent =
-                                (process_harvest.gpu_mem as f64 / *gpu_total_mem as f64 * 100.0)
+                                (process_harvest.gpu_mem as f64
+                                    / *gpu_total_mem as f64
+                                    * 100.0)
                                     as f32;
                         }
                     }
 
                     prev_proc_details.cpu_time = new_process_times;
-                    prev_proc_details.total_read_bytes = process_harvest.total_read;
-                    prev_proc_details.total_write_bytes = process_harvest.total_write;
+                    prev_proc_details.total_read_bytes =
+                        process_harvest.total_read;
+                    prev_proc_details.total_write_bytes =
+                        process_harvest.total_write;
 
                     if !threads.is_empty() {
                         process_threads_to_check.insert(pid, threads);
@@ -461,16 +480,25 @@ pub(crate) fn linux_process_data(
     // Get thread data.
     for (pid, tid_paths) in process_threads_to_check {
         for tid_path in tid_paths {
-            if let Ok((process, _)) = Process::from_path(tid_path, &mut buffer, false) {
+            if let Ok((process, _)) =
+                Process::from_path(tid_path, &mut buffer, false)
+            {
                 let tid = process.pid;
-                let prev_proc_details = prev_process_details.entry(tid).or_default();
+                let prev_proc_details =
+                    prev_process_details.entry(tid).or_default();
 
-                if let Ok((process_harvest, new_process_times)) =
-                    read_proc(prev_proc_details, process, args, user_table, Some(pid))
-                {
+                if let Ok((process_harvest, new_process_times)) = read_proc(
+                    prev_proc_details,
+                    process,
+                    args,
+                    user_table,
+                    Some(pid),
+                ) {
                     prev_proc_details.cpu_time = new_process_times;
-                    prev_proc_details.total_read_bytes = process_harvest.total_read;
-                    prev_proc_details.total_write_bytes = process_harvest.total_write;
+                    prev_proc_details.total_read_bytes =
+                        process_harvest.total_read;
+                    prev_proc_details.total_write_bytes =
+                        process_harvest.total_write;
 
                     seen_pids.insert(tid);
                     process_vector.push(process_harvest);
@@ -552,7 +580,9 @@ mod tests {
             "b t m"
         );
         assert_eq!(
-            binary_name_from_cmdline("firefox -contentproc -isForBrowser -prefsHandle 0"),
+            binary_name_from_cmdline(
+                "firefox -contentproc -isForBrowser -prefsHandle 0"
+            ),
             "firefox"
         );
     }

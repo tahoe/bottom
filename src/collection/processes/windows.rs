@@ -77,14 +77,17 @@ pub fn sysinfo_process_data(
             if let Some(gpus) = &collector.gpu_pids {
                 gpus.iter().for_each(|gpu| {
                     // add mem/util for all gpus to pid
-                    if let Some((mem, util)) = gpu.get(&process_val.pid().as_u32()) {
+                    if let Some((mem, util)) =
+                        gpu.get(&process_val.pid().as_u32())
+                    {
                         gpu_mem += mem;
                         gpu_util += util;
                     }
                 });
             }
             if let Some(gpu_total_mem) = &collector.gpus_total_mem {
-                gpu_mem_percent = (gpu_mem as f64 / *gpu_total_mem as f64 * 100.0) as f32;
+                gpu_mem_percent =
+                    (gpu_mem as f64 / *gpu_total_mem as f64 * 100.0) as f32;
             }
             (gpu_mem, gpu_util, gpu_mem_percent)
         };
@@ -106,9 +109,9 @@ pub fn sysinfo_process_data(
             total_read: disk_usage.total_read_bytes,
             total_write: disk_usage.total_written_bytes,
             process_state,
-            user: process_val
-                .user_id()
-                .and_then(|uid| users.get_user_by_id(uid).map(|user| user.name().into())),
+            user: process_val.user_id().and_then(|uid| {
+                users.get_user_by_id(uid).map(|user| user.name().into())
+            }),
             time: if process_val.start_time() == 0 {
                 // Workaround for sysinfo occasionally returning a start time equal to UNIX
                 // epoch, giving a run time in the range of 50+ years. We just

@@ -79,7 +79,9 @@ pub fn zfs_io_stats() -> anyhow::Result<Vec<IoCounters>> {
                             .filter_map(|e| {
                                 e.ok().and_then(|d| {
                                     let p = d.path();
-                                    if p.is_file() && p.to_str()?.contains("objset-") {
+                                    if p.is_file()
+                                        && p.to_str()?.contains("objset-")
+                                    {
                                         Some(p)
                                     } else {
                                         None
@@ -96,29 +98,41 @@ pub fn zfs_io_stats() -> anyhow::Result<Vec<IoCounters>> {
                                 let mut write = 0;
                                 let mut name = "";
                                 contents.lines().for_each(|line| {
-                                    if let Some((label, value)) = line.split_once(' ') {
+                                    if let Some((label, value)) =
+                                        line.split_once(' ')
+                                    {
                                         match label {
                                             "dataset_name" => {
                                                 if let Some((_type, val)) =
-                                                    value.trim_start().rsplit_once(' ')
+                                                    value
+                                                        .trim_start()
+                                                        .rsplit_once(' ')
                                                 {
                                                     name = val;
                                                 }
                                             }
                                             "nwritten" => {
                                                 if let Some((_type, val)) =
-                                                    value.trim_start().rsplit_once(' ')
+                                                    value
+                                                        .trim_start()
+                                                        .rsplit_once(' ')
                                                 {
-                                                    if let Ok(number) = val.parse::<u64>() {
+                                                    if let Ok(number) =
+                                                        val.parse::<u64>()
+                                                    {
                                                         write = number;
                                                     }
                                                 }
                                             }
                                             "nread" => {
                                                 if let Some((_type, val)) =
-                                                    value.trim_start().rsplit_once(' ')
+                                                    value
+                                                        .trim_start()
+                                                        .rsplit_once(' ')
                                                 {
-                                                    if let Ok(number) = val.parse::<u64>() {
+                                                    if let Ok(number) =
+                                                        val.parse::<u64>()
+                                                    {
                                                         read = number;
                                                     }
                                                 }
@@ -128,7 +142,11 @@ pub fn zfs_io_stats() -> anyhow::Result<Vec<IoCounters>> {
                                     }
                                 });
 
-                                let counter = IoCounters::new(name.to_owned(), read, write);
+                                let counter = IoCounters::new(
+                                    name.to_owned(),
+                                    read,
+                                    write,
+                                );
                                 Some(counter)
                             } else {
                                 None

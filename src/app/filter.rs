@@ -50,7 +50,9 @@ impl Filter {
 
     /// Check a filter if it exists, otherwise accept if it is [`None`].
     #[inline]
-    pub(crate) fn optional_should_keep(filter: &Option<Self>, entry: &str) -> bool {
+    pub(crate) fn optional_should_keep(
+        filter: &Option<Self>, entry: &str,
+    ) -> bool {
         filter
             .as_ref()
             .map(|f| f.should_keep(entry))

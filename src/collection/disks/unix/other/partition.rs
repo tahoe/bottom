@@ -62,17 +62,20 @@ fn partitions_iter() -> anyhow::Result<impl Iterator<Item = Partition>> {
 
     Ok(mounts.into_iter().map(|stat| {
         // SAFETY: Should be a non-null pointer.
-        let device = unsafe { ptr_to_cow(stat.f_mntfromname.as_ptr()).to_string() };
+        let device =
+            unsafe { ptr_to_cow(stat.f_mntfromname.as_ptr()).to_string() };
 
         let fs_type = {
             // SAFETY: Should be a non-null pointer.
             let fs_type_str = unsafe { ptr_to_cow(stat.f_fstypename.as_ptr()) };
-            FileSystem::from_str(&fs_type_str).unwrap_or(FileSystem::Other(fs_type_str.to_string()))
+            FileSystem::from_str(&fs_type_str)
+                .unwrap_or(FileSystem::Other(fs_type_str.to_string()))
         };
 
         let mount_point = {
             // SAFETY: Should be a non-null pointer.
-            let path_str = unsafe { ptr_to_cow(stat.f_mntonname.as_ptr()).to_string() };
+            let path_str =
+                unsafe { ptr_to_cow(stat.f_mntonname.as_ptr()).to_string() };
             PathBuf::from(path_str)
         };
 

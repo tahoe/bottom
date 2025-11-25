@@ -66,27 +66,39 @@ impl BatteryData {
     }
 }
 
-pub fn refresh_batteries(manager: &Manager, batteries: &mut [Battery]) -> Vec<BatteryData> {
+pub fn refresh_batteries(
+    manager: &Manager, batteries: &mut [Battery],
+) -> Vec<BatteryData> {
     batteries
         .iter_mut()
         .filter_map(|battery| {
             if manager.refresh(battery).is_ok() {
                 Some(BatteryData {
-                    charge_percent: f64::from(battery.state_of_charge().get::<percent>()),
-                    power_consumption: f64::from(battery.energy_rate().get::<watt>()),
-                    health_percent: f64::from(battery.state_of_health().get::<percent>()),
+                    charge_percent: f64::from(
+                        battery.state_of_charge().get::<percent>(),
+                    ),
+                    power_consumption: f64::from(
+                        battery.energy_rate().get::<watt>(),
+                    ),
+                    health_percent: f64::from(
+                        battery.state_of_health().get::<percent>(),
+                    ),
                     state: match battery.state() {
                         State::Unknown => BatteryState::Unknown,
                         State::Charging => BatteryState::Charging {
                             time_to_full: {
                                 let optional_time = battery.time_to_full();
-                                optional_time.map(|time| f64::from(time.get::<second>()) as u32)
+                                optional_time.map(|time| {
+                                    f64::from(time.get::<second>()) as u32
+                                })
                             },
                         },
                         State::Discharging => BatteryState::Discharging {
                             time_to_empty: {
                                 let optional_time = battery.time_to_empty();
-                                optional_time.map(|time| f64::from(time.get::<second>()) as u32)
+                                optional_time.map(|time| {
+                                    f64::from(time.get::<second>()) as u32
+                                })
                             },
                         },
                         State::Empty => BatteryState::Empty,

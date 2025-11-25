@@ -11,9 +11,9 @@ use anyhow::bail;
 use windows::Win32::{
     Foundation::{self, CloseHandle, HANDLE},
     Storage::FileSystem::{
-        CreateFileW, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ, FILE_SHARE_WRITE,
-        FindFirstVolumeW, FindNextVolumeW, FindVolumeClose, GetVolumeNameForVolumeMountPointW,
-        OPEN_EXISTING,
+        CreateFileW, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ,
+        FILE_SHARE_WRITE, FindFirstVolumeW, FindNextVolumeW, FindVolumeClose,
+        GetVolumeNameForVolumeMountPointW, OPEN_EXISTING,
     },
     System::{
         IO::DeviceIoControl,
@@ -32,7 +32,8 @@ fn volume_io(volume: &Path) -> anyhow::Result<DISK_PERFORMANCE> {
     }
 
     let volume = {
-        let mut wide_path = volume.as_os_str().encode_wide().collect::<Vec<_>>();
+        let mut wide_path =
+            volume.as_os_str().encode_wide().collect::<Vec<_>>();
 
         // We replace the trailing backslash and replace it with a \0.
         wide_path.pop();
@@ -108,7 +109,8 @@ fn close_find_handle(handle: HANDLE) -> anyhow::Result<()> {
 ///
 /// Based on [psutil's implementation](https://github.com/giampaolo/psutil/blob/52fe5517f716dedf9c9918e56325e49a49146130/psutil/arch/windows/disk.c#L78-L83)
 /// and [heim's implementation](https://github.com/heim-rs/heim/blob/master/heim-disk/src/sys/windows/bindings/perf.rs).
-pub(crate) fn all_volume_io() -> anyhow::Result<Vec<anyhow::Result<(DISK_PERFORMANCE, String)>>> {
+pub(crate) fn all_volume_io()
+-> anyhow::Result<Vec<anyhow::Result<(DISK_PERFORMANCE, String)>>> {
     const ERROR_NO_MORE_FILES: i32 = Foundation::ERROR_NO_MORE_FILES.0 as i32;
     let mut ret = vec![];
     let mut buffer = [0_u16; Foundation::MAX_PATH as usize];
@@ -123,13 +125,19 @@ pub(crate) fn all_volume_io() -> anyhow::Result<Vec<anyhow::Result<(DISK_PERFORM
 
     {
         let volume = current_volume(&buffer);
-        ret.push(volume_io(&volume).map(|res| (res, volume.to_string_lossy().to_string())));
+        ret.push(
+            volume_io(&volume)
+                .map(|res| (res, volume.to_string_lossy().to_string())),
+        );
     }
 
     // Now iterate until there are no more volumes.
     while unsafe { FindNextVolumeW(handle, &mut buffer) }.is_ok() {
         let volume = current_volume(&buffer);
-        ret.push(volume_io(&volume).map(|res| (res, volume.to_string_lossy().to_string())));
+        ret.push(
+            volume_io(&volume)
+                .map(|res| (res, volume.to_string_lossy().to_string())),
+        );
     }
 
     let err = io::Error::last_os_error();
@@ -157,7 +165,8 @@ pub(crate) fn volume_name_from_mount(mount: &str) -> anyhow::Result<String> {
 
     let mount = {
         let mount_path = Path::new(mount);
-        let mut wide_path = mount_path.as_os_str().encode_wide().collect::<Vec<_>>();
+        let mut wide_path =
+            mount_path.as_os_str().encode_wide().collect::<Vec<_>>();
 
         // Always push on a \0 character, without this it will occasionally break.
         wide_path.push(0x0000);
@@ -168,7 +177,10 @@ pub(crate) fn volume_name_from_mount(mount: &str) -> anyhow::Result<String> {
 
     // SAFETY: API call, we must check the result for validating safety.
     let result = unsafe {
-        GetVolumeNameForVolumeMountPointW(windows::core::PCWSTR(mount.as_ptr()), &mut buffer)
+        GetVolumeNameForVolumeMountPointW(
+            windows::core::PCWSTR(mount.as_ptr()),
+            &mut buffer,
+        )
     };
 
     if let Err(err) = result {

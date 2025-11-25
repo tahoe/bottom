@@ -36,12 +36,16 @@ impl FromStr for IoCounters {
     /// <https://www.kernel.org/doc/Documentation/iostats.txt>
     /// <https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats>
     fn from_str(s: &str) -> anyhow::Result<IoCounters> {
-        fn next_part<'a>(iter: &mut impl Iterator<Item = &'a str>) -> Result<&'a str, io::Error> {
+        fn next_part<'a>(
+            iter: &mut impl Iterator<Item = &'a str>,
+        ) -> Result<&'a str, io::Error> {
             iter.next()
                 .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))
         }
 
-        fn next_part_to_u64<'a>(iter: &mut impl Iterator<Item = &'a str>) -> anyhow::Result<u64> {
+        fn next_part_to_u64<'a>(
+            iter: &mut impl Iterator<Item = &'a str>,
+        ) -> anyhow::Result<u64> {
             next_part(iter)?
                 .parse()
                 .map_err(|err: ParseIntError| err.into())

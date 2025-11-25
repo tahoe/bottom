@@ -23,7 +23,8 @@ mod test {
     #[test]
     fn empty_column_setting() {
         let config = "";
-        let generated: ProcessesConfig = toml_edit::de::from_str(config).unwrap();
+        let generated: ProcessesConfig =
+            toml_edit::de::from_str(config).unwrap();
         assert!(generated.columns.is_empty());
     }
 
@@ -40,7 +41,8 @@ mod test {
             columns = ["CPU%", "PiD", "user", "MEM", "virt", "Tread", "T.Write", "Rps", "W/s", "tiMe", "USER", "state"]
         "#;
 
-        let generated: ProcessesConfig = toml_edit::de::from_str(config).unwrap();
+        let generated: ProcessesConfig =
+            toml_edit::de::from_str(config).unwrap();
         assert_eq!(
             to_columns(generated.columns),
             vec![
@@ -63,34 +65,39 @@ mod test {
     #[test]
     fn bad_process_column_config() {
         let config = r#"columns = ["MEM", "TWrite", "Cpuz", "read", "wps"]"#;
-        toml_edit::de::from_str::<ProcessesConfig>(config).expect_err("Should error out!");
+        toml_edit::de::from_str::<ProcessesConfig>(config)
+            .expect_err("Should error out!");
     }
 
     #[test]
     fn valid_process_column_config_2() {
         let config = r#"columns = ["Twrite", "T.Write"]"#;
-        let generated: ProcessesConfig = toml_edit::de::from_str(config).unwrap();
+        let generated: ProcessesConfig =
+            toml_edit::de::from_str(config).unwrap();
         assert_eq!(
             to_columns(generated.columns),
             vec![ProcWidgetColumn::TotalWrite; 2]
         );
 
         let config = r#"columns = ["Tread", "T.read"]"#;
-        let generated: ProcessesConfig = toml_edit::de::from_str(config).unwrap();
+        let generated: ProcessesConfig =
+            toml_edit::de::from_str(config).unwrap();
         assert_eq!(
             to_columns(generated.columns),
             vec![ProcWidgetColumn::TotalRead; 2]
         );
 
         let config = r#"columns = ["read", "rps", "r/s"]"#;
-        let generated: ProcessesConfig = toml_edit::de::from_str(config).unwrap();
+        let generated: ProcessesConfig =
+            toml_edit::de::from_str(config).unwrap();
         assert_eq!(
             to_columns(generated.columns),
             vec![ProcWidgetColumn::ReadPerSecond; 3]
         );
 
         let config = r#"columns = ["write", "wps", "w/s"]"#;
-        let generated: ProcessesConfig = toml_edit::de::from_str(config).unwrap();
+        let generated: ProcessesConfig =
+            toml_edit::de::from_str(config).unwrap();
         assert_eq!(
             to_columns(generated.columns),
             vec![ProcWidgetColumn::WritePerSecond; 3]

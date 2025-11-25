@@ -13,11 +13,15 @@ use crate::{
 
 impl Painter {
     pub fn draw_basic_network(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
         let divided_loc = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .constraints([
+                Constraint::Percentage(50),
+                Constraint::Percentage(50),
+            ])
             .split(draw_loc);
 
         let net_loc = Layout::default()
@@ -40,7 +44,8 @@ impl Painter {
             );
         }
 
-        let use_binary_prefix = app_state.app_config_fields.network_use_binary_prefix;
+        let use_binary_prefix =
+            app_state.app_config_fields.network_use_binary_prefix;
         let network_data = &(app_state.data_store.get_data().network_harvest);
         let rx = get_unit_prefix(network_data.rx, use_binary_prefix);
         let tx = get_unit_prefix(network_data.tx, use_binary_prefix);
@@ -49,8 +54,10 @@ impl Painter {
 
         let rx_label = format!("RX: {:.1}{}", rx.0, rx.1);
         let tx_label = format!("TX: {:.1}{}", tx.0, tx.1);
-        let total_rx_label = format!("Total RX: {:.1}{}", total_rx.0, total_rx.1);
-        let total_tx_label = format!("Total TX: {:.1}{}", total_tx.0, total_tx.1);
+        let total_rx_label =
+            format!("Total RX: {:.1}{}", total_rx.0, total_rx.1);
+        let total_tx_label =
+            format!("Total TX: {:.1}{}", total_tx.0, total_tx.1);
 
         let net_text = vec![
             Line::from(Span::styled(rx_label, self.styles.rx_style)),
@@ -58,11 +65,20 @@ impl Painter {
         ];
 
         let total_net_text = vec![
-            Line::from(Span::styled(total_rx_label, self.styles.total_rx_style)),
-            Line::from(Span::styled(total_tx_label, self.styles.total_tx_style)),
+            Line::from(Span::styled(
+                total_rx_label,
+                self.styles.total_rx_style,
+            )),
+            Line::from(Span::styled(
+                total_tx_label,
+                self.styles.total_tx_style,
+            )),
         ];
 
-        f.render_widget(Paragraph::new(net_text).block(Block::default()), net_loc[0]);
+        f.render_widget(
+            Paragraph::new(net_text).block(Block::default()),
+            net_loc[0],
+        );
 
         f.render_widget(
             Paragraph::new(total_net_text).block(Block::default()),
@@ -73,8 +89,10 @@ impl Painter {
         if app_state.should_get_widget_bounds() {
             if let Some(widget) = app_state.widget_map.get_mut(&widget_id) {
                 widget.top_left_corner = Some((draw_loc.x, draw_loc.y));
-                widget.bottom_right_corner =
-                    Some((draw_loc.x + draw_loc.width, draw_loc.y + draw_loc.height));
+                widget.bottom_right_corner = Some((
+                    draw_loc.x + draw_loc.width,
+                    draw_loc.y + draw_loc.height,
+                ));
             }
         }
     }

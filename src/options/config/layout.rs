@@ -55,9 +55,10 @@ fn new_proc_search(search_id: u64) -> BottomWidget {
 
 impl Row {
     pub fn convert_row_to_bottom_row(
-        &self, iter_id: &mut u64, total_height_ratio: &mut u16, default_widget_id: &mut u64,
-        default_widget_type: &Option<BottomWidgetType>, default_widget_count: &mut u64,
-        cpu_left_legend: bool,
+        &self, iter_id: &mut u64, total_height_ratio: &mut u16,
+        default_widget_id: &mut u64,
+        default_widget_type: &Option<BottomWidgetType>,
+        default_widget_count: &mut u64, cpu_left_legend: bool,
     ) -> OptionResult<BottomRow> {
         // TODO: In the future we want to also add percentages.
         // But for MVP, we aren't going to bother.
@@ -74,10 +75,14 @@ impl Row {
                         *iter_id += 1;
                         let width_ratio = widget.ratio.unwrap_or(1);
                         total_col_ratio += width_ratio;
-                        let widget_type = widget.widget_type.parse::<BottomWidgetType>()?;
+                        let widget_type =
+                            widget.widget_type.parse::<BottomWidgetType>()?;
 
-                        if let Some(default_widget_type_val) = default_widget_type {
-                            if *default_widget_type_val == widget_type && *default_widget_count > 0
+                        if let Some(default_widget_type_val) =
+                            default_widget_type
+                        {
+                            if *default_widget_type_val == widget_type
+                                && *default_widget_count > 0
                             {
                                 *default_widget_count -= 1;
                                 if *default_widget_count == 0 {
@@ -95,8 +100,11 @@ impl Row {
 
                         children.push(match widget_type {
                             BottomWidgetType::Cpu => {
-                                BottomCol::new(vec![new_cpu(cpu_left_legend, iter_id)])
-                                    .ratio(width_ratio)
+                                BottomCol::new(vec![new_cpu(
+                                    cpu_left_legend,
+                                    iter_id,
+                                )])
+                                .ratio(width_ratio)
                             }
                             BottomWidgetType::Proc => {
                                 let proc_id = *iter_id;
@@ -109,16 +117,17 @@ impl Row {
                                     ])
                                     .grow(None)
                                     .total_widget_ratio(3),
-                                    BottomColRow::new(vec![new_proc_search(proc_search_id)])
-                                        .canvas_handled(),
+                                    BottomColRow::new(vec![new_proc_search(
+                                        proc_search_id,
+                                    )])
+                                    .canvas_handled(),
                                 ])
                                 .total_col_row_ratio(2)
                                 .ratio(width_ratio)
                             }
-                            _ => BottomCol::new(vec![BottomColRow::new(vec![BottomWidget::new(
-                                widget_type,
-                                *iter_id,
-                            )])])
+                            _ => BottomCol::new(vec![BottomColRow::new(vec![
+                                BottomWidget::new(widget_type, *iter_id),
+                            ])])
                             .ratio(width_ratio),
                         });
                     }
@@ -127,13 +136,18 @@ impl Row {
                         total_col_ratio += col_width_ratio;
                         let mut total_col_row_ratio = 0;
 
-                        let mut col_row_children: Vec<BottomColRow> = Vec::new();
+                        let mut col_row_children: Vec<BottomColRow> =
+                            Vec::new();
 
                         for widget in child {
-                            let widget_type = widget.widget_type.parse::<BottomWidgetType>()?;
+                            let widget_type = widget
+                                .widget_type
+                                .parse::<BottomWidgetType>()?;
                             *iter_id += 1;
 
-                            if let Some(default_widget_type_val) = default_widget_type {
+                            if let Some(default_widget_type_val) =
+                                default_widget_type
+                            {
                                 if *default_widget_type_val == widget_type
                                     && *default_widget_count > 0
                                 {
@@ -144,7 +158,9 @@ impl Row {
                                 }
                             } else {
                                 // Check default flag
-                                if let Some(default_widget_flag) = widget.default {
+                                if let Some(default_widget_flag) =
+                                    widget.default
+                                {
                                     if default_widget_flag {
                                         *default_widget_id = *iter_id;
                                     }
@@ -153,7 +169,8 @@ impl Row {
 
                             match widget_type {
                                 BottomWidgetType::Cpu => {
-                                    let col_row_height_ratio = widget.ratio.unwrap_or(1);
+                                    let col_row_height_ratio =
+                                        widget.ratio.unwrap_or(1);
                                     total_col_row_ratio += col_row_height_ratio;
 
                                     col_row_children.push(
@@ -162,7 +179,8 @@ impl Row {
                                     );
                                 }
                                 BottomWidgetType::Proc => {
-                                    let col_row_height_ratio = widget.ratio.unwrap_or(1) + 1;
+                                    let col_row_height_ratio =
+                                        widget.ratio.unwrap_or(1) + 1;
                                     total_col_row_ratio += col_row_height_ratio;
 
                                     let proc_id = *iter_id;
@@ -177,19 +195,24 @@ impl Row {
                                         .total_widget_ratio(3),
                                     );
                                     col_row_children.push(
-                                        BottomColRow::new(vec![new_proc_search(proc_search_id)])
-                                            .canvas_handled(),
+                                        BottomColRow::new(vec![
+                                            new_proc_search(proc_search_id),
+                                        ])
+                                        .canvas_handled(),
                                     );
                                 }
                                 _ => {
-                                    let col_row_height_ratio = widget.ratio.unwrap_or(1);
+                                    let col_row_height_ratio =
+                                        widget.ratio.unwrap_or(1);
                                     total_col_row_ratio += col_row_height_ratio;
 
                                     col_row_children.push(
-                                        BottomColRow::new(vec![BottomWidget::new(
-                                            widget_type,
-                                            *iter_id,
-                                        )])
+                                        BottomColRow::new(vec![
+                                            BottomWidget::new(
+                                                widget_type,
+                                                *iter_id,
+                                            ),
+                                        ])
                                         .ratio(col_row_height_ratio),
                                     )
                                 }
@@ -267,7 +290,8 @@ mod test {
     "#;
 
     fn test_create_layout(
-        rows: &[Row], default_widget_id: u64, default_widget_type: Option<BottomWidgetType>,
+        rows: &[Row], default_widget_id: u64,
+        default_widget_type: Option<BottomWidgetType>,
         default_widget_count: u64, left_legend: bool,
     ) -> BottomLayout {
         let mut iter_id = 0; // A lazy way of forcing unique IDs *shrugs*
@@ -301,69 +325,84 @@ mod test {
     /// Tests the default setup.
     fn test_default_movement() {
         let rows = from_str::<Config>(DEFAULT_LAYOUT).unwrap().row.unwrap();
-        let ret_bottom_layout = test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, false);
+        let ret_bottom_layout =
+            test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, false);
 
         // Simple tests for the top CPU widget
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .down_neighbour,
             Some(3)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .right_neighbour,
             Some(2)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .left_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .up_neighbour,
             None
         );
 
         // Test CPU legend
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .down_neighbour,
             Some(4)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .right_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .left_neighbour,
             Some(1)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .up_neighbour,
             None
         );
 
         // Test memory->temp, temp->disk, disk->memory mappings
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[0].right_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[0]
+                .right_neighbour,
             Some(4)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[1].children[0].children[0].down_neighbour,
+            ret_bottom_layout.rows[1].children[1].children[0].children[0]
+                .down_neighbour,
             Some(5)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[1].children[1].children[0].left_neighbour,
+            ret_bottom_layout.rows[1].children[1].children[1].children[0]
+                .left_neighbour,
             Some(3)
         );
 
         // Test disk -> processes, processes -> process sort, process sort -> network
         assert_eq!(
-            ret_bottom_layout.rows[1].children[1].children[1].children[0].down_neighbour,
+            ret_bottom_layout.rows[1].children[1].children[1].children[0]
+                .down_neighbour,
             Some(7)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[1].left_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[1]
+                .left_neighbour,
             Some(9)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[0].left_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[0]
+                .left_neighbour,
             Some(6)
         );
     }
@@ -378,41 +417,50 @@ mod test {
             .unwrap()
             .row
             .unwrap();
-        let ret_bottom_layout = test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, false);
+        let ret_bottom_layout =
+            test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, false);
 
         // Simple tests for the top CPU widget
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .down_neighbour,
             Some(4)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .right_neighbour,
             Some(2)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .left_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .up_neighbour,
             None
         );
 
         // Test CPU legend
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .down_neighbour,
             Some(5)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .right_neighbour,
             Some(3)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .left_neighbour,
             Some(1)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .up_neighbour,
             None
         );
     }
@@ -421,41 +469,50 @@ mod test {
     /// Tests using cpu_left_legend.
     fn test_cpu_left_legend() {
         let rows = from_str::<Config>(DEFAULT_LAYOUT).unwrap().row.unwrap();
-        let ret_bottom_layout = test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, true);
+        let ret_bottom_layout =
+            test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, true);
 
         // Legend
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .down_neighbour,
             Some(3)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .right_neighbour,
             Some(1)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .left_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .up_neighbour,
             None
         );
 
         // Widget
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .down_neighbour,
             Some(3)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .right_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .left_neighbour,
             Some(2)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .up_neighbour,
             None
         );
     }
@@ -546,167 +603,204 @@ mod test {
     #[test]
     fn test_proc_custom_layout() {
         let rows = from_str::<Config>(PROC_LAYOUT).unwrap().row.unwrap();
-        let ret_bottom_layout = test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, false);
+        let ret_bottom_layout =
+            test_create_layout(&rows, DEFAULT_WIDGET_ID, None, 1, false);
 
         // First proc widget
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .down_neighbour,
             Some(2)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .left_neighbour,
             Some(3)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .right_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[1].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[1]
+                .up_neighbour,
             None
         );
 
         // Its search
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[1].children[0].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[1].children[0]
+                .down_neighbour,
             Some(4)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[1].children[0].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[1].children[0]
+                .left_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[1].children[0].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[1].children[0]
+                .right_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[1].children[0].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[1].children[0]
+                .up_neighbour,
             Some(1)
         );
 
         // Its sort
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].down_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .down_neighbour,
             Some(2)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].left_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .left_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].right_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .right_neighbour,
             Some(1)
         );
         assert_eq!(
-            ret_bottom_layout.rows[0].children[0].children[0].children[0].up_neighbour,
+            ret_bottom_layout.rows[0].children[0].children[0].children[0]
+                .up_neighbour,
             None
         );
 
         // Let us now test the second row's first widget...
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[1].down_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[1]
+                .down_neighbour,
             Some(5)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[1].left_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[1]
+                .left_neighbour,
             Some(6)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[1].right_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[1]
+                .right_neighbour,
             Some(9)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[1].up_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[1]
+                .up_neighbour,
             Some(2)
         );
 
         // Sort
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[0].down_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[0]
+                .down_neighbour,
             Some(5)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[0].left_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[0]
+                .left_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[0].right_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[0]
+                .right_neighbour,
             Some(4)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[0].children[0].up_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[0].children[0]
+                .up_neighbour,
             Some(2)
         );
 
         // Search
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[1].children[0].down_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[1].children[0]
+                .down_neighbour,
             Some(10)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[1].children[0].left_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[1].children[0]
+                .left_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[1].children[0].right_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[1].children[0]
+                .right_neighbour,
             Some(8)
         );
         assert_eq!(
-            ret_bottom_layout.rows[1].children[0].children[1].children[0].up_neighbour,
+            ret_bottom_layout.rows[1].children[0].children[1].children[0]
+                .up_neighbour,
             Some(4)
         );
 
         // Third row, second
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[1].down_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[1]
+                .down_neighbour,
             Some(14)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[1].left_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[1]
+                .left_neighbour,
             Some(15)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[1].right_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[1]
+                .right_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[1].up_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[1]
+                .up_neighbour,
             Some(8)
         );
 
         // Sort
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[0].down_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[0]
+                .down_neighbour,
             Some(14)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[0].left_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[0]
+                .left_neighbour,
             Some(10)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[0].right_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[0]
+                .right_neighbour,
             Some(13)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[0].children[0].up_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[0].children[0]
+                .up_neighbour,
             Some(8)
         );
 
         // Search
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[1].children[0].down_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[1].children[0]
+                .down_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[1].children[0].left_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[1].children[0]
+                .left_neighbour,
             Some(11)
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[1].children[0].right_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[1].children[0]
+                .right_neighbour,
             None
         );
         assert_eq!(
-            ret_bottom_layout.rows[2].children[1].children[1].children[0].up_neighbour,
+            ret_bottom_layout.rows[2].children[1].children[1].children[0]
+                .up_neighbour,
             Some(13)
         );
     }

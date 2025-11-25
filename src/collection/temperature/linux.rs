@@ -75,7 +75,8 @@ fn get_hwmon_candidates() -> (HashSet<PathBuf>, usize) {
                             //
                             // For more info, see https://github.com/giampaolo/psutil/pull/1822/files
                             if let Some(child) = path.file_name() {
-                                let to_check_path = Path::new("/sys/class/hwmon").join(child);
+                                let to_check_path =
+                                    Path::new("/sys/class/hwmon").join(child);
 
                                 if !dirs.contains(&to_check_path) {
                                     dirs.insert(path);
@@ -125,28 +126,31 @@ fn uppercase_first_letter(s: &mut str) {
 
 fn finalize_name(
     hwmon_name: Option<String>, sensor_label: Option<String>,
-    fallback_sensor_name: &Option<String>, seen_names: &mut HashMap<String, u32>,
+    fallback_sensor_name: &Option<String>,
+    seen_names: &mut HashMap<String, u32>,
 ) -> String {
     let candidate_name = match (hwmon_name, sensor_label) {
-        (Some(name), Some(mut label)) => match (name.is_empty(), label.is_empty()) {
-            (false, false) => {
-                uppercase_first_letter(&mut label);
-                format!("{name}: {label}")
-            }
-            (true, false) => {
-                uppercase_first_letter(&mut label);
-
-                // We assume label must not be empty.
-                match fallback_sensor_name {
-                    Some(fallback) if !fallback.is_empty() => {
-                        format!("{fallback}: {label}")
-                    }
-                    _ => label,
+        (Some(name), Some(mut label)) => {
+            match (name.is_empty(), label.is_empty()) {
+                (false, false) => {
+                    uppercase_first_letter(&mut label);
+                    format!("{name}: {label}")
                 }
+                (true, false) => {
+                    uppercase_first_letter(&mut label);
+
+                    // We assume label must not be empty.
+                    match fallback_sensor_name {
+                        Some(fallback) if !fallback.is_empty() => {
+                            format!("{fallback}: {label}")
+                        }
+                        _ => label,
+                    }
+                }
+                (false, true) => name.to_owned(),
+                (true, true) => EMPTY_NAME.to_string(),
             }
-            (false, true) => name.to_owned(),
-            (true, true) => EMPTY_NAME.to_string(),
-        },
+        }
         (None, Some(mut label)) => match fallback_sensor_name {
             Some(fallback) if !fallback.is_empty() => {
                 if label.is_empty() {
@@ -173,7 +177,9 @@ fn finalize_name(
             }
         }
         (None, None) => match fallback_sensor_name {
-            Some(sensor_name) if !sensor_name.is_empty() => sensor_name.to_owned(),
+            Some(sensor_name) if !sensor_name.is_empty() => {
+                sensor_name.to_owned()
+            }
             _ => EMPTY_NAME.to_string(),
         },
     };
@@ -244,7 +250,8 @@ fn hwmon_temperatures(filter: &Option<Filter>) -> HwmonResults {
                 }
 
                 let temp_path = file.path();
-                let sensor_label_path = file_path.join(name.replace("input", "label"));
+                let sensor_label_path =
+                    file_path.join(name.replace("input", "label"));
                 let sensor_label = read_to_string_lossy(sensor_label_path);
 
                 // Do some messing around to get a more sensible name for sensors:
@@ -313,8 +320,14 @@ fn hwmon_temperatures(filter: &Option<Filter>) -> HwmonResults {
                                 .map(|s| s.trim().to_owned());
 
                             match link {
-                                Some(link) if link.as_bytes()[0].is_ascii_alphabetic() => {
-                                    Some(humanize_name(link, sensor_name.as_ref()))
+                                Some(link)
+                                    if link.as_bytes()[0]
+                                        .is_ascii_alphabetic() =>
+                                {
+                                    Some(humanize_name(
+                                        link,
+                                        sensor_name.as_ref(),
+                                    ))
                                 }
                                 _ => None,
                             }
@@ -322,7 +335,12 @@ fn hwmon_temperatures(filter: &Option<Filter>) -> HwmonResults {
                     }
                 };
 
-                let name = finalize_name(hwmon_name, sensor_label, &sensor_name, &mut seen_names);
+                let name = finalize_name(
+                    hwmon_name,
+                    sensor_label,
+                    &sensor_name,
+                    &mut seen_names,
+                );
 
                 // TODO: It's possible we may want to move the filter check further up to avoid
                 // probing hwmon if not needed?
@@ -350,7 +368,9 @@ fn hwmon_temperatures(filter: &Option<Filter>) -> HwmonResults {
 ///
 /// See [the Linux kernel documentation](https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-thermal)
 /// for more details.
-fn add_thermal_zone_temperatures(temperatures: &mut Vec<TempSensorData>, filter: &Option<Filter>) {
+fn add_thermal_zone_temperatures(
+    temperatures: &mut Vec<TempSensorData>, filter: &Option<Filter>,
+) {
     let path = Path::new("/sys/class/thermal");
     let Ok(read_dir) = path.read_dir() else {
         return;
@@ -391,7 +411,9 @@ fn add_thermal_zone_temperatures(temperatures: &mut Vec<TempSensorData>, filter:
 }
 
 /// Gets temperature sensors and data.
-pub fn get_temperature_data(filter: &Option<Filter>) -> Result<Option<Vec<TempSensorData>>> {
+pub fn get_temperature_data(
+    filter: &Option<Filter>,
+) -> Result<Option<Vec<TempSensorData>>> {
     let mut results = hwmon_temperatures(filter);
 
     if results.num_hwmon == 0 {
@@ -452,14 +474,27 @@ mod tests {
         );
 
         assert_eq!(
-            finalize_name(None, None, &Some("test".to_string()), &mut seen_names),
+            finalize_name(
+                None,
+                None,
+                &Some("test".to_string()),
+                &mut seen_names
+            ),
             "test"
         );
 
-        assert_eq!(finalize_name(None, None, &None, &mut seen_names), "Unknown");
+        assert_eq!(
+            finalize_name(None, None, &None, &mut seen_names),
+            "Unknown"
+        );
 
         assert_eq!(
-            finalize_name(None, None, &Some("test".to_string()), &mut seen_names),
+            finalize_name(
+                None,
+                None,
+                &Some("test".to_string()),
+                &mut seen_names
+            ),
             "test (1)"
         );
 
@@ -469,17 +504,32 @@ mod tests {
         );
 
         assert_eq!(
-            finalize_name(Some(String::default()), None, &None, &mut seen_names),
+            finalize_name(
+                Some(String::default()),
+                None,
+                &None,
+                &mut seen_names
+            ),
             "Unknown (2)"
         );
 
         assert_eq!(
-            finalize_name(None, Some(String::default()), &None, &mut seen_names),
+            finalize_name(
+                None,
+                Some(String::default()),
+                &None,
+                &mut seen_names
+            ),
             "Unknown (3)"
         );
 
         assert_eq!(
-            finalize_name(None, None, &Some(String::default()), &mut seen_names),
+            finalize_name(
+                None,
+                None,
+                &Some(String::default()),
+                &mut seen_names
+            ),
             "Unknown (4)"
         );
     }

@@ -11,8 +11,8 @@ use crate::collection::{Pid, error::CollectionResult, processes::UserTable};
 
 pub(crate) trait UnixProcessExt {
     fn sysinfo_process_data(
-        sys: &System, use_current_cpu_total: bool, unnormalized_cpu: bool, total_memory: u64,
-        user_table: &mut UserTable,
+        sys: &System, use_current_cpu_total: bool, unnormalized_cpu: bool,
+        total_memory: u64, user_table: &mut UserTable,
     ) -> CollectionResult<Vec<ProcessHarvest>> {
         let mut process_vector: Vec<ProcessHarvest> = Vec::new();
         let process_hashmap = sys.processes();
@@ -56,7 +56,8 @@ pub(crate) trait UnixProcessExt {
                     usage / num_processors as f32
                 }
             };
-            let process_cpu_usage = if use_current_cpu_total && cpu_usage > 0.0 {
+            let process_cpu_usage = if use_current_cpu_total && cpu_usage > 0.0
+            {
                 pcu / cpu_usage
             } else {
                 pcu
@@ -75,7 +76,8 @@ pub(crate) trait UnixProcessExt {
                 name,
                 command,
                 mem_usage_percent: if total_memory > 0 {
-                    (process_val.memory() as f64 * 100.0 / total_memory as f64) as f32
+                    (process_val.memory() as f64 * 100.0 / total_memory as f64)
+                        as f32
                 } else {
                     0.0
                 },
@@ -118,11 +120,13 @@ pub(crate) trait UnixProcessExt {
             let cpu_usages = Self::backup_proc_cpu(&cpu_usage_unknown_pids)?;
             for process in &mut process_vector {
                 if cpu_usages.contains_key(&process.pid) {
-                    process.cpu_usage_percent = if unnormalized_cpu || num_processors == 0 {
-                        *cpu_usages.get(&process.pid).unwrap()
-                    } else {
-                        *cpu_usages.get(&process.pid).unwrap() / num_processors as f32
-                    };
+                    process.cpu_usage_percent =
+                        if unnormalized_cpu || num_processors == 0 {
+                            *cpu_usages.get(&process.pid).unwrap()
+                        } else {
+                            *cpu_usages.get(&process.pid).unwrap()
+                                / num_processors as f32
+                        };
                 }
             }
         }

@@ -581,8 +581,14 @@ mod test {
     fn help_menu_text_has_sections() {
         for (itx, line) in HELP_TEXT.iter().enumerate() {
             if itx > 0 {
-                assert!(line.len() >= 2, "each section should be at least 2 lines");
-                assert!(line[0].contains(" - "), "each section should have a header");
+                assert!(
+                    line.len() >= 2,
+                    "each section should be at least 2 lines"
+                );
+                assert!(
+                    line[0].contains(" - "),
+                    "each section should have a header"
+                );
             }
         }
     }
@@ -603,8 +609,8 @@ mod test {
             .unwrap()
             .replace_all(&default_config, "$2");
 
-        let _config: Config =
-            toml_edit::de::from_str(&default_config).expect("can parse default config");
+        let _config: Config = toml_edit::de::from_str(&default_config)
+            .expect("can parse default config");
 
         // TODO: Check this.
         // assert_eq!(config, Config::default());

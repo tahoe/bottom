@@ -44,7 +44,8 @@ impl Styles {
             border_style: hex!("#88c0d0"),
             highlighted_border_style: hex!("#5e81ac"),
             text_style: hex!("#e5e9f0"),
-            selected_text_style: hex!("#2e3440").bg(convert_hex_to_color("#88c0d0").unwrap()),
+            selected_text_style: hex!("#2e3440")
+                .bg(convert_hex_to_color("#88c0d0").unwrap()),
             table_header_style: hex!("#81a1c1").add_modifier(Modifier::BOLD),
             widget_title_style: hex!("#e5e9f0"),
             graph_style: hex!("#e5e9f0"),
@@ -97,7 +98,8 @@ impl Styles {
             border_style: hex!("#2e3440"),
             highlighted_border_style: hex!("#5e81ac"),
             text_style: hex!("#2e3440"),
-            selected_text_style: hex!("#f5f5f5").bg(convert_hex_to_color("#5e81ac").unwrap()),
+            selected_text_style: hex!("#f5f5f5")
+                .bg(convert_hex_to_color("#5e81ac").unwrap()),
             table_header_style: hex!("#5e81ac").add_modifier(Modifier::BOLD),
             widget_title_style: hex!("#2e3440"),
             graph_style: hex!("#2e3440"),

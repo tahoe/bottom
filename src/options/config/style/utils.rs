@@ -4,9 +4,12 @@ use unicode_segmentation::UnicodeSegmentation;
 
 /// Convert a hex string to a colour.
 pub(super) fn convert_hex_to_color(hex: &str) -> Result<Color, String> {
-    fn hex_component_to_int(hex: &str, first: &str, second: &str) -> Result<u8, String> {
-        u8::from_str_radix(&concat_string!(first, second), 16)
-            .map_err(|_| format!("'{hex}' is an invalid hex color, could not decode."))
+    fn hex_component_to_int(
+        hex: &str, first: &str, second: &str,
+    ) -> Result<u8, String> {
+        u8::from_str_radix(&concat_string!(first, second), 16).map_err(|_| {
+            format!("'{hex}' is an invalid hex color, could not decode.")
+        })
     }
 
     fn invalid_hex_format(hex: &str) -> String {
@@ -86,7 +89,9 @@ fn convert_name_to_colour(color_name: &str) -> Result<Color, String> {
         "magenta" => Ok(Color::Magenta),
         "cyan" => Ok(Color::Cyan),
         "gray" | "grey" => Ok(Color::Gray),
-        "darkgray" | "darkgrey" | "dark gray" | "dark grey" => Ok(Color::DarkGray),
+        "darkgray" | "darkgrey" | "dark gray" | "dark grey" => {
+            Ok(Color::DarkGray)
+        }
         "lightred" | "light red" => Ok(Color::LightRed),
         "lightgreen" | "light green" => Ok(Color::LightGreen),
         "lightyellow" | "light yellow" => Ok(Color::LightYellow),
@@ -275,7 +280,10 @@ mod test {
         assert_eq!(str_to_colour("red").unwrap(), Color::Red);
         assert!(str_to_colour("r ed").is_err());
 
-        assert_eq!(str_to_colour("#ffffff").unwrap(), Color::Rgb(255, 255, 255));
+        assert_eq!(
+            str_to_colour("#ffffff").unwrap(),
+            Color::Rgb(255, 255, 255)
+        );
         assert!(str_to_colour("#fff fff").is_err());
 
         assert_eq!(
@@ -449,7 +457,10 @@ mod test {
                 color_b: Some(ColorStr("red".into())),
                 color_c: Some(ColorStr("255, 255, 255".into())),
                 color_d: Some(ColorStr("#000000".into())),
-                many_colors: Some(vec![ColorStr("red".into()), ColorStr("blue".into())]),
+                many_colors: Some(vec![
+                    ColorStr("red".into()),
+                    ColorStr("blue".into()),
+                ]),
                 text_a: Some(TextStyleConfig::Colour(ColorStr("green".into()))),
                 text_b: Some(TextStyleConfig::TextStyle {
                     color: None,

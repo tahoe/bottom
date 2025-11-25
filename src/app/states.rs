@@ -3,14 +3,16 @@ use std::ops::Range;
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 use unicode_ellipsis::grapheme_width;
-use unicode_segmentation::{GraphemeCursor, GraphemeIncomplete, UnicodeSegmentation};
+use unicode_segmentation::{
+    GraphemeCursor, GraphemeIncomplete, UnicodeSegmentation,
+};
 
 use crate::{
     app::layout_manager::BottomWidgetType,
     constants,
     widgets::{
-        BatteryWidgetState, CpuWidgetState, DiskTableWidget, MemWidgetState, NetWidgetState,
-        ProcWidgetState, TempWidgetState, query::ProcessQuery,
+        BatteryWidgetState, CpuWidgetState, DiskTableWidget, MemWidgetState,
+        NetWidgetState, ProcWidgetState, TempWidgetState, query::ProcessQuery,
     },
 };
 
@@ -99,7 +101,9 @@ impl AppSearchState {
     }
 
     /// Sets the starting grapheme index to draw from.
-    pub fn get_start_position(&mut self, available_width: usize, is_force_redraw: bool) {
+    pub fn get_start_position(
+        &mut self, available_width: usize, is_force_redraw: bool,
+    ) {
         // Remember - the number of columns != the number of grapheme slots/sizes, you
         // cannot use index to determine this reliably!
 
@@ -140,7 +144,8 @@ impl AppSearchState {
                         let mut index = 0;
                         for i in 0..(cursor_index + 1) {
                             if let Some(r) = self.size_mappings.get(&i) {
-                                if r.start + available_width >= cursor_range.end {
+                                if r.start + available_width >= cursor_range.end
+                                {
                                     index = i;
                                     break;
                                 }
@@ -155,9 +160,11 @@ impl AppSearchState {
                 CursorDirection::Left => {
                     if cursor_range.start < start_range.end {
                         let mut index = 0;
-                        for i in cursor_index..(self.current_search_query.len()) {
+                        for i in cursor_index..(self.current_search_query.len())
+                        {
                             if let Some(r) = self.size_mappings.get(&i) {
-                                if r.start + available_width >= cursor_range.end {
+                                if r.start + available_width >= cursor_range.end
+                                {
                                     index = i;
                                     break;
                                 }
@@ -223,9 +230,10 @@ impl AppSearchState {
     pub(crate) fn update_sizes(&mut self) {
         self.size_mappings.clear();
         let mut curr_offset = 0;
-        for (index, grapheme) in
-            UnicodeSegmentation::grapheme_indices(self.current_search_query.as_str(), true)
-        {
+        for (index, grapheme) in UnicodeSegmentation::grapheme_indices(
+            self.current_search_query.as_str(),
+            true,
+        ) {
             let width = grapheme_width(grapheme);
             let end = curr_offset + width;
 
@@ -247,7 +255,9 @@ impl ProcState {
         ProcState { widget_states }
     }
 
-    pub fn get_mut_widget_state(&mut self, widget_id: u64) -> Option<&mut ProcWidgetState> {
+    pub fn get_mut_widget_state(
+        &mut self, widget_id: u64,
+    ) -> Option<&mut ProcWidgetState> {
         self.widget_states.get_mut(&widget_id)
     }
 
@@ -275,7 +285,9 @@ impl CpuState {
         CpuState { widget_states }
     }
 
-    pub fn get_mut_widget_state(&mut self, widget_id: u64) -> Option<&mut CpuWidgetState> {
+    pub fn get_mut_widget_state(
+        &mut self, widget_id: u64,
+    ) -> Option<&mut CpuWidgetState> {
         self.widget_states.get_mut(&widget_id)
     }
 
@@ -303,7 +315,9 @@ impl TempState {
         TempState { widget_states }
     }
 
-    pub fn get_mut_widget_state(&mut self, widget_id: u64) -> Option<&mut TempWidgetState> {
+    pub fn get_mut_widget_state(
+        &mut self, widget_id: u64,
+    ) -> Option<&mut TempWidgetState> {
         self.widget_states.get_mut(&widget_id)
     }
 
@@ -321,7 +335,9 @@ impl DiskState {
         DiskState { widget_states }
     }
 
-    pub fn get_mut_widget_state(&mut self, widget_id: u64) -> Option<&mut DiskTableWidget> {
+    pub fn get_mut_widget_state(
+        &mut self, widget_id: u64,
+    ) -> Option<&mut DiskTableWidget> {
         self.widget_states.get_mut(&widget_id)
     }
 
@@ -350,7 +366,9 @@ impl AppBatteryState {
         AppBatteryState { widget_states }
     }
 
-    pub fn get_mut_widget_state(&mut self, widget_id: u64) -> Option<&mut BatteryWidgetState> {
+    pub fn get_mut_widget_state(
+        &mut self, widget_id: u64,
+    ) -> Option<&mut BatteryWidgetState> {
         self.widget_states.get_mut(&widget_id)
     }
 }
@@ -379,7 +397,8 @@ mod test {
     fn search_cursor_moves() {
         let mut state = AppSearchState::default();
         state.current_search_query = "Hi, 你好! 🇦🇶".to_string();
-        state.grapheme_cursor = GraphemeCursor::new(0, state.current_search_query.len(), true);
+        state.grapheme_cursor =
+            GraphemeCursor::new(0, state.current_search_query.len(), true);
         state.update_sizes();
 
         // Moving right.

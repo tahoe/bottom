@@ -10,14 +10,17 @@ pub const AUTOHIDE_TIMEOUT_MILLISECONDS: u64 = 5000; // 5 seconds to autohide
 
 /// Determine whether a graph x-label should be hidden.
 pub fn should_hide_x_label(
-    always_hide_time: bool, autohide_time: bool, timer: &mut Option<Instant>, draw_loc: Rect,
+    always_hide_time: bool, autohide_time: bool, timer: &mut Option<Instant>,
+    draw_loc: Rect,
 ) -> bool {
     const TIME_LABEL_HEIGHT_LIMIT: u16 = 7;
 
     if always_hide_time || (autohide_time && timer.is_none()) {
         true
     } else if let Some(time) = timer {
-        if Instant::now().duration_since(*time).as_millis() < AUTOHIDE_TIMEOUT_MILLISECONDS.into() {
+        if Instant::now().duration_since(*time).as_millis()
+            < AUTOHIDE_TIMEOUT_MILLISECONDS.into()
+        {
             false
         } else {
             *timer = None;
@@ -29,7 +32,9 @@ pub fn should_hide_x_label(
 }
 
 /// Return a widget block.
-pub fn widget_block(is_basic: bool, is_selected: bool, border_type: BorderType) -> Block<'static> {
+pub fn widget_block(
+    is_basic: bool, is_selected: bool, border_type: BorderType,
+) -> Block<'static> {
     let mut block = Block::default().border_type(border_type);
 
     if is_basic {
@@ -67,8 +72,9 @@ mod test {
         let small_rect = Rect::new(0, 0, 10, 6);
 
         let mut under_timer = Some(Instant::now());
-        let mut over_timer =
-            Instant::now().checked_sub(Duration::from_millis(AUTOHIDE_TIMEOUT_MILLISECONDS + 100));
+        let mut over_timer = Instant::now().checked_sub(Duration::from_millis(
+            AUTOHIDE_TIMEOUT_MILLISECONDS + 100,
+        ));
 
         assert!(should_hide_x_label(true, false, &mut None, rect));
         assert!(should_hide_x_label(false, true, &mut None, rect));

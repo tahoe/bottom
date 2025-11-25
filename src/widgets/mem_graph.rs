@@ -6,7 +6,9 @@ pub struct MemWidgetState {
 }
 
 impl MemWidgetState {
-    pub fn init(current_display_time: u64, autohide_timer: Option<Instant>) -> Self {
+    pub fn init(
+        current_display_time: u64, autohide_timer: Option<Instant>,
+    ) -> Self {
         MemWidgetState {
             current_display_time,
             autohide_timer,

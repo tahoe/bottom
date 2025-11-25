@@ -100,11 +100,14 @@ cfg_if! {
 ///    entry.
 /// 3. Anything else is allowed.
 pub fn keep_disk_entry(
-    disk_name: &str, mount_point: &str, disk_filter: &Option<Filter>, mount_filter: &Option<Filter>,
+    disk_name: &str, mount_point: &str, disk_filter: &Option<Filter>,
+    mount_filter: &Option<Filter>,
 ) -> bool {
     match (disk_filter, mount_filter) {
         (Some(d), Some(m)) => match (d.ignore_matches(), m.ignore_matches()) {
-            (true, true) => !(d.has_match(disk_name) || m.has_match(mount_point)),
+            (true, true) => {
+                !(d.has_match(disk_name) || m.has_match(mount_point))
+            }
             (true, false) => {
                 if m.has_match(mount_point) {
                     true
@@ -119,7 +122,9 @@ pub fn keep_disk_entry(
                     m.should_keep(mount_point)
                 }
             }
-            (false, false) => d.has_match(disk_name) || m.has_match(mount_point),
+            (false, false) => {
+                d.has_match(disk_name) || m.has_match(mount_point)
+            }
         },
         (Some(d), None) => d.should_keep(disk_name),
         (None, Some(m)) => m.should_keep(mount_point),
@@ -134,7 +139,9 @@ mod test {
     use super::keep_disk_entry;
     use crate::app::filter::Filter;
 
-    fn run_filter(disk_filter: &Option<Filter>, mount_filter: &Option<Filter>) -> Vec<usize> {
+    fn run_filter(
+        disk_filter: &Option<Filter>, mount_filter: &Option<Filter>,
+    ) -> Vec<usize> {
         let targets = [
             ("/dev/nvme0n1p1", "/boot"),
             ("/dev/nvme0n1p2", "/"),
@@ -158,10 +165,14 @@ mod test {
 
     #[test]
     fn test_keeping_disk_entry() {
-        let disk_ignore = Some(Filter::new(true, vec![Regex::new("nvme").unwrap()]));
-        let disk_keep = Some(Filter::new(false, vec![Regex::new("nvme").unwrap()]));
-        let mount_ignore = Some(Filter::new(true, vec![Regex::new("boot").unwrap()]));
-        let mount_keep = Some(Filter::new(false, vec![Regex::new("boot").unwrap()]));
+        let disk_ignore =
+            Some(Filter::new(true, vec![Regex::new("nvme").unwrap()]));
+        let disk_keep =
+            Some(Filter::new(false, vec![Regex::new("nvme").unwrap()]));
+        let mount_ignore =
+            Some(Filter::new(true, vec![Regex::new("boot").unwrap()]));
+        let mount_keep =
+            Some(Filter::new(false, vec![Regex::new("boot").unwrap()]));
 
         assert_eq!(run_filter(&None, &None), vec![0, 1, 2, 3, 4]);
 

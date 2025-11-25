@@ -313,7 +313,11 @@ pub struct ProcessArgs {
     )]
     pub current_usage: bool,
 
-    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "freebsd"
+    ))]
     #[arg(
         long,
         action = ArgAction::SetTrue,
@@ -468,7 +472,9 @@ impl ValueEnum for CpuDefault {
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
             CpuDefault::All => Some(PossibleValue::new("all")),
-            CpuDefault::Average => Some(PossibleValue::new("avg").alias("average")),
+            CpuDefault::Average => {
+                Some(PossibleValue::new("avg").alias("average"))
+            }
         }
     }
 }

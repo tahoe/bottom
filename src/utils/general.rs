@@ -1,7 +1,9 @@
 use std::cmp::Ordering;
 
 #[inline]
-pub(crate) const fn sort_partial_fn<T: PartialOrd>(is_descending: bool) -> fn(T, T) -> Ordering {
+pub(crate) const fn sort_partial_fn<T: PartialOrd>(
+    is_descending: bool,
+) -> fn(T, T) -> Ordering {
     if is_descending {
         partial_ordering_desc
     } else {

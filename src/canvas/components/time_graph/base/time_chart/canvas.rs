@@ -75,7 +75,8 @@ impl Shape for CanvasLine {
 }
 
 fn draw_line_low(
-    painter: &mut Painter<'_, '_>, x1: usize, y1: usize, x2: usize, y2: usize, color: Color,
+    painter: &mut Painter<'_, '_>, x1: usize, y1: usize, x2: usize, y2: usize,
+    color: Color,
 ) {
     let dx = (x2 - x1) as isize;
     let dy = (y2 as isize - y1 as isize).abs();
@@ -96,7 +97,8 @@ fn draw_line_low(
 }
 
 fn draw_line_high(
-    painter: &mut Painter<'_, '_>, x1: usize, y1: usize, x2: usize, y2: usize, color: Color,
+    painter: &mut Painter<'_, '_>, x1: usize, y1: usize, x2: usize, y2: usize,
+    color: Color,
 ) {
     let dx = (x2 as isize - x1 as isize).abs();
     let dy = (y2 - y1) as isize;
@@ -153,8 +155,10 @@ impl Painter<'_, '_> {
         if width <= 0.0 || height <= 0.0 {
             return None;
         }
-        let x = ((x - left) * (self.resolution.0 - 1.0) / width).round() as usize;
-        let y = ((top - y) * (self.resolution.1 - 1.0) / height).round() as usize;
+        let x =
+            ((x - left) * (self.resolution.0 - 1.0) / width).round() as usize;
+        let y =
+            ((top - y) * (self.resolution.1 - 1.0) / height).round() as usize;
         Some((x, y))
     }
 
@@ -186,14 +190,21 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new(
-        width: u16, height: u16, x_bounds: [f64; 2], y_bounds: [f64; 2], marker: symbols::Marker,
+        width: u16, height: u16, x_bounds: [f64; 2], y_bounds: [f64; 2],
+        marker: symbols::Marker,
     ) -> Context<'a> {
         let grid: Box<dyn Grid> = match marker {
             symbols::Marker::Dot => Box::new(CharGrid::new(width, height, '•')),
-            symbols::Marker::Block => Box::new(CharGrid::new(width, height, '█')),
+            symbols::Marker::Block => {
+                Box::new(CharGrid::new(width, height, '█'))
+            }
             symbols::Marker::Bar => Box::new(CharGrid::new(width, height, '▄')),
-            symbols::Marker::Braille => Box::new(BrailleGrid::new(width, height)),
-            symbols::Marker::HalfBlock => Box::new(HalfBlockGrid::new(width, height)),
+            symbols::Marker::Braille => {
+                Box::new(BrailleGrid::new(width, height))
+            }
+            symbols::Marker::HalfBlock => {
+                Box::new(HalfBlockGrid::new(width, height))
+            }
         };
         Context {
             x_bounds,
@@ -326,9 +337,10 @@ where
             const BRAILLE_BASE: char = '\u{2800}';
             if ch != ' ' && ch != BRAILLE_BASE {
                 let (x, y) = (i % width, i / width);
-                if let Some(cell) =
-                    buf.cell_mut((x as u16 + canvas_area.left(), y as u16 + canvas_area.top()))
-                {
+                if let Some(cell) = buf.cell_mut((
+                    x as u16 + canvas_area.left(),
+                    y as u16 + canvas_area.top(),
+                )) {
                     cell.set_char(ch).set_fg(fg).set_bg(bg);
                 }
             }
@@ -350,13 +362,13 @@ where
             let height = f64::from(canvas_area.height - 1);
             (width, height)
         };
-        for label in ctx
-            .labels
-            .iter()
-            .filter(|l| l.x >= left && l.x <= right && l.y <= top && l.y >= bottom)
-        {
-            let x = ((label.x - left) * resolution.0 / width) as u16 + canvas_area.left();
-            let y = ((top - label.y) * resolution.1 / height) as u16 + canvas_area.top();
+        for label in ctx.labels.iter().filter(|l| {
+            l.x >= left && l.x <= right && l.y <= top && l.y >= bottom
+        }) {
+            let x = ((label.x - left) * resolution.0 / width) as u16
+                + canvas_area.left();
+            let y = ((top - label.y) * resolution.1 / height) as u16
+                + canvas_area.top();
             buf.set_line(x, y, &label.spans, canvas_area.right() - x);
         }
     }

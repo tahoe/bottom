@@ -7,7 +7,8 @@ use tui::{layout::Constraint, symbols::Marker};
 use crate::{
     app::AppConfigFields,
     canvas::components::time_graph::{
-        AxisBound, ChartScaling, LegendPosition, TimeGraph, variants::get_border_style,
+        AxisBound, ChartScaling, LegendPosition, TimeGraph,
+        variants::get_border_style,
     },
     options::config::style::Styles,
 };
@@ -60,7 +61,8 @@ impl<'a> PercentTimeGraph<'a> {
     /// Return the final [`TimeGraph`].
     pub fn build(self) -> TimeGraph<'a> {
         const Y_BOUNDS: AxisBound = AxisBound::Max(100.5);
-        const Y_LABELS: [Cow<'static, str>; 2] = [Cow::Borrowed("  0%"), Cow::Borrowed("100%")];
+        const Y_LABELS: [Cow<'static, str>; 2] =
+            [Cow::Borrowed("  0%"), Cow::Borrowed("100%")];
 
         let x_min = -(self.display_range as f64);
 
@@ -71,7 +73,8 @@ impl<'a> PercentTimeGraph<'a> {
         };
 
         let graph_style = self.styles.graph_style;
-        let border_style = get_border_style(self.styles, self.widget_id, self.current_widget);
+        let border_style =
+            get_border_style(self.styles, self.widget_id, self.current_widget);
         let title_style = self.styles.widget_title_style;
         let border_type = self.styles.border_type;
 

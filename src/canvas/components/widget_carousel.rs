@@ -12,17 +12,19 @@ use crate::{
 
 impl Painter {
     pub fn draw_basic_table_arrows(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
         if let Some(current_table) = app_state.widget_map.get(&widget_id) {
-            let current_table = if let BottomWidgetType::ProcSort = current_table.widget_type {
-                current_table
-                    .right_neighbour
-                    .map(|id| app_state.widget_map.get(&id).unwrap())
-                    .unwrap()
-            } else {
-                current_table
-            };
+            let current_table =
+                if let BottomWidgetType::ProcSort = current_table.widget_type {
+                    current_table
+                        .right_neighbour
+                        .map(|id| app_state.widget_map.get(&id).unwrap())
+                        .unwrap()
+                } else {
+                    current_table
+                };
 
             let (left_table, right_table) = (
                 {
@@ -33,17 +35,23 @@ impl Painter {
                                 .widget_map
                                 .get(&left_widget_id)
                                 .map(|left_widget| {
-                                    if left_widget.widget_type == BottomWidgetType::ProcSort {
+                                    if left_widget.widget_type
+                                        == BottomWidgetType::ProcSort
+                                    {
                                         left_widget
                                             .left_neighbour
                                             .map(|left_left_widget_id| {
-                                                app_state.widget_map.get(&left_left_widget_id).map(
-                                                    |left_left_widget| {
-                                                        &left_left_widget.widget_type
-                                                    },
-                                                )
+                                                app_state
+                                                    .widget_map
+                                                    .get(&left_left_widget_id)
+                                                    .map(|left_left_widget| {
+                                                        &left_left_widget
+                                                            .widget_type
+                                                    })
                                             })
-                                            .unwrap_or(Some(&BottomWidgetType::Temp))
+                                            .unwrap_or(Some(
+                                                &BottomWidgetType::Temp,
+                                            ))
                                             .unwrap_or(&BottomWidgetType::Temp)
                                     } else {
                                         &left_widget.widget_type
@@ -61,7 +69,9 @@ impl Painter {
                                 .widget_map
                                 .get(&right_widget_id)
                                 .map(|right_widget| {
-                                    if right_widget.widget_type == BottomWidgetType::ProcSort {
+                                    if right_widget.widget_type
+                                        == BottomWidgetType::ProcSort
+                                    {
                                         right_widget
                                             .right_neighbour
                                             .map(|right_right_widget_id| {
@@ -69,10 +79,13 @@ impl Painter {
                                                     .widget_map
                                                     .get(&right_right_widget_id)
                                                     .map(|right_right_widget| {
-                                                        &right_right_widget.widget_type
+                                                        &right_right_widget
+                                                            .widget_type
                                                     })
                                             })
-                                            .unwrap_or(Some(&BottomWidgetType::Disk))
+                                            .unwrap_or(Some(
+                                                &BottomWidgetType::Disk,
+                                            ))
                                             .unwrap_or(&BottomWidgetType::Disk)
                                     } else {
                                         &right_widget.widget_type
@@ -87,22 +100,29 @@ impl Painter {
             // TODO: I can do this text effect as just a border now!
             let left_name = left_table.get_pretty_name();
             let right_name = right_table.get_pretty_name();
-            let num_spaces =
-                usize::from(draw_loc.width).saturating_sub(6 + left_name.len() + right_name.len());
-            let carousel_text_style = if widget_id == app_state.current_widget.widget_id {
-                self.styles.highlighted_border_style
-            } else {
-                self.styles.text_style
-            };
+            let num_spaces = usize::from(draw_loc.width)
+                .saturating_sub(6 + left_name.len() + right_name.len());
+            let carousel_text_style =
+                if widget_id == app_state.current_widget.widget_id {
+                    self.styles.highlighted_border_style
+                } else {
+                    self.styles.text_style
+                };
 
             let left_arrow_text = vec![
                 Line::default(),
-                Line::from(Span::styled(format!("◄ {left_name}"), carousel_text_style)),
+                Line::from(Span::styled(
+                    format!("◄ {left_name}"),
+                    carousel_text_style,
+                )),
             ];
 
             let right_arrow_text = vec![
                 Line::default(),
-                Line::from(Span::styled(format!("{right_name} ►"), carousel_text_style)),
+                Line::from(Span::styled(
+                    format!("{right_name} ►"),
+                    carousel_text_style,
+                )),
             ];
 
             let margined_draw_loc = Layout::default()
@@ -140,15 +160,21 @@ impl Painter {
                 //   https://github.com/ClementTsang/bottom/pull/459 for details).
                 // - So in other words, to make it simple, we keep this to a standard and
                 //   overshoot by one here.
-                if let Some(basic_table) = &mut app_state.states.basic_table_widget_state {
-                    basic_table.left_tlc =
-                        Some((margined_draw_loc[0].x, margined_draw_loc[0].y + 1));
+                if let Some(basic_table) =
+                    &mut app_state.states.basic_table_widget_state
+                {
+                    basic_table.left_tlc = Some((
+                        margined_draw_loc[0].x,
+                        margined_draw_loc[0].y + 1,
+                    ));
                     basic_table.left_brc = Some((
                         margined_draw_loc[0].x + margined_draw_loc[0].width,
                         margined_draw_loc[0].y + 2,
                     ));
-                    basic_table.right_tlc =
-                        Some((margined_draw_loc[2].x, margined_draw_loc[2].y + 1));
+                    basic_table.right_tlc = Some((
+                        margined_draw_loc[2].x,
+                        margined_draw_loc[2].y + 1,
+                    ));
                     basic_table.right_brc = Some((
                         margined_draw_loc[2].x + margined_draw_loc[2].width,
                         margined_draw_loc[2].y + 2,

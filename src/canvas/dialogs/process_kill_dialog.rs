@@ -3,7 +3,11 @@
 use std::time::Instant;
 
 use cfg_if::cfg_if;
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "freebsd"
+))]
 use tui::widgets::ListState;
 use tui::{
     Frame,
@@ -13,7 +17,8 @@ use tui::{
 };
 
 use crate::{
-    canvas::drawing_utils::dialog_block, collection::processes::Pid, options::config::style::Styles,
+    canvas::drawing_utils::dialog_block, collection::processes::Pid,
+    options::config::style::Styles,
 };
 
 // Configure signal text based on the target OS.
@@ -170,7 +175,11 @@ cfg_if! {
 /// Note that signals are not available for Windows.
 #[derive(Debug)]
 pub(crate) enum ButtonState {
-    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "freebsd"
+    ))]
     Signals {
         state: ListState,
         last_button_draw_area: Rect,
@@ -234,7 +243,11 @@ impl ProcessKillDialog {
             let pids = state.pids;
 
             match button_state {
-                #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+                #[cfg(any(
+                    target_os = "linux",
+                    target_os = "macos",
+                    target_os = "freebsd"
+                ))]
                 ButtonState::Signals { state, .. } => {
                     use crate::utils::process_killer;
 
@@ -251,13 +264,16 @@ impl ProcessKillDialog {
 
                             for pid in pids {
                                 if let Err(err) =
-                                    process_killer::kill_process_given_pid(pid, signal)
+                                    process_killer::kill_process_given_pid(
+                                        pid, signal,
+                                    )
                                 {
-                                    self.state = ProcessKillDialogState::Error {
-                                        process_name,
-                                        pid: Some(pid),
-                                        err: err.to_string(),
-                                    };
+                                    self.state =
+                                        ProcessKillDialogState::Error {
+                                            process_name,
+                                            pid: Some(pid),
+                                            err: err.to_string(),
+                                        };
                                     return;
                                 }
                             }
@@ -301,8 +317,13 @@ impl ProcessKillDialog {
     }
 
     pub fn on_char(&mut self, c: char) {
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
-        const MAX_KEY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
+        const MAX_KEY_TIMEOUT: std::time::Duration =
+            std::time::Duration::from_secs(1);
 
         match c {
             'h' => self.on_left_key(),
@@ -310,15 +331,23 @@ impl ProcessKillDialog {
             'k' => self.on_up_key(),
             'l' => self.on_right_key(),
             '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-                #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+                #[cfg(any(
+                    target_os = "linux",
+                    target_os = "macos",
+                    target_os = "freebsd"
+                ))]
                 if let Some(value) = c.to_digit(10) {
-                    if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
-                        button_state: ButtonState::Signals { state, .. },
-                        ..
-                    }) = &mut self.state
+                    if let ProcessKillDialogState::Selecting(
+                        ProcessKillSelectingInner {
+                            button_state: ButtonState::Signals { state, .. },
+                            ..
+                        },
+                    ) = &mut self.state
                     {
                         if let Some((prev, last_press)) = self.last_char {
-                            if prev.is_ascii_digit() && last_press.elapsed() <= MAX_KEY_TIMEOUT {
+                            if prev.is_ascii_digit()
+                                && last_press.elapsed() <= MAX_KEY_TIMEOUT
+                            {
                                 let current = state.selected().unwrap_or(0);
                                 let new = {
                                     let new = current * 10 + value as usize;
@@ -359,7 +388,11 @@ impl ProcessKillDialog {
                 }
             }
             'g' => {
-                #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+                #[cfg(any(
+                    target_os = "linux",
+                    target_os = "macos",
+                    target_os = "freebsd"
+                ))]
                 {
                     if let Some(('g', last_press)) = self.last_char {
                         if last_press.elapsed() <= MAX_KEY_TIMEOUT {
@@ -375,7 +408,11 @@ impl ProcessKillDialog {
                 }
             }
             'G' => {
-                #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+                #[cfg(any(
+                    target_os = "linux",
+                    target_os = "macos",
+                    target_os = "freebsd"
+                ))]
                 self.go_to_last();
             }
             _ => {}
@@ -389,14 +426,19 @@ impl ProcessKillDialog {
     pub fn on_click(&mut self, x: u16, y: u16) -> bool {
         if let ProcessKillDialogState::Selecting(state) = &mut self.state {
             match &mut state.button_state {
-                #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+                #[cfg(any(
+                    target_os = "linux",
+                    target_os = "macos",
+                    target_os = "freebsd"
+                ))]
                 ButtonState::Signals {
                     state,
                     last_button_draw_area,
                 } => {
                     if last_button_draw_area.contains(Position { x, y }) {
                         let relative_y =
-                            y.saturating_sub(last_button_draw_area.y) as usize + state.offset();
+                            y.saturating_sub(last_button_draw_area.y) as usize
+                                + state.offset();
                         if relative_y < SIGNAL_TEXT.len() {
                             state.select(Some(relative_y));
                         }
@@ -455,7 +497,11 @@ impl ProcessKillDialog {
         }
     }
 
-    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "freebsd"
+    ))]
     fn scroll_up_by(state: &mut ListState, amount: usize) {
         if let Some(selected) = state.selected() {
             if let Some(new_position) = selected.checked_sub(amount) {
@@ -466,7 +512,11 @@ impl ProcessKillDialog {
         }
     }
 
-    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "freebsd"
+    ))]
     fn scroll_down_by(state: &mut ListState, amount: usize) {
         if let Some(selected) = state.selected() {
             let new_position = selected + amount;
@@ -482,7 +532,11 @@ impl ProcessKillDialog {
     pub fn on_up_key(&mut self) {
         self.last_char = None;
 
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
         if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
             button_state: ButtonState::Signals { state, .. },
             ..
@@ -496,7 +550,11 @@ impl ProcessKillDialog {
     pub fn on_down_key(&mut self) {
         self.last_char = None;
 
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
         if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
             button_state: ButtonState::Signals { state, .. },
             ..
@@ -510,7 +568,11 @@ impl ProcessKillDialog {
     pub fn on_page_up(&mut self) {
         self.last_char = None;
 
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
         if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
             button_state:
                 ButtonState::Signals {
@@ -529,7 +591,11 @@ impl ProcessKillDialog {
     pub fn on_page_down(&mut self) {
         self.last_char = None;
 
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
         if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
             button_state:
                 ButtonState::Signals {
@@ -547,7 +613,11 @@ impl ProcessKillDialog {
     pub fn go_to_first(&mut self) {
         self.last_char = None;
 
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
         if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
             button_state: ButtonState::Signals { state, .. },
             ..
@@ -560,7 +630,11 @@ impl ProcessKillDialog {
     pub fn go_to_last(&mut self) {
         self.last_char = None;
 
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
         if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
             button_state: ButtonState::Signals { state, .. },
             ..
@@ -572,7 +646,8 @@ impl ProcessKillDialog {
 
     /// Enable the process kill process.
     pub fn start_process_kill(
-        &mut self, process_name: String, pids: Vec<Pid>, use_simple_selection: bool,
+        &mut self, process_name: String, pids: Vec<Pid>,
+        use_simple_selection: bool,
     ) {
         let button_state = if use_simple_selection {
             ButtonState::Simple {
@@ -599,22 +674,29 @@ impl ProcessKillDialog {
             return;
         }
 
-        self.state = ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
-            process_name,
-            pids,
-            button_state,
-        });
+        self.state =
+            ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
+                process_name,
+                pids,
+                button_state,
+            });
     }
 
     pub fn handle_redraw(&mut self) {
         // FIXME: Not sure if we need this. We can probably handle this better in the draw function later.
 
-        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "macos",
+            target_os = "freebsd"
+        ))]
         {
-            if let ProcessKillDialogState::Selecting(ProcessKillSelectingInner {
-                button_state: ButtonState::Signals { state, .. },
-                ..
-            }) = &mut self.state
+            if let ProcessKillDialogState::Selecting(
+                ProcessKillSelectingInner {
+                    button_state: ButtonState::Signals { state, .. },
+                    ..
+                },
+            ) = &mut self.state
             {
                 // Fix the button offset state when we do things like resize.
                 *state.offset_mut() = 0;
@@ -624,7 +706,8 @@ impl ProcessKillDialog {
 
     #[inline]
     fn draw_selecting(
-        f: &mut Frame<'_>, draw_area: Rect, styles: &Styles, state: &mut ProcessKillSelectingInner,
+        f: &mut Frame<'_>, draw_area: Rect, styles: &Styles,
+        state: &mut ProcessKillSelectingInner,
     ) {
         let ProcessKillSelectingInner {
             process_name,
@@ -638,8 +721,10 @@ impl ProcessKillDialog {
             const MAX_PROCESS_NAME_WIDTH: usize = 20;
 
             if let Some(first_pid) = pids.first() {
-                let truncated_process_name =
-                    unicode_ellipsis::truncate_str(process_name, MAX_PROCESS_NAME_WIDTH);
+                let truncated_process_name = unicode_ellipsis::truncate_str(
+                    process_name,
+                    MAX_PROCESS_NAME_WIDTH,
+                );
 
                 let text = if pids.len() > 1 {
                     Line::from(format!(
@@ -668,25 +753,37 @@ impl ProcessKillDialog {
             .wrap(Wrap { trim: true });
 
         let title = match button_state {
-            #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+            #[cfg(any(
+                target_os = "linux",
+                target_os = "macos",
+                target_os = "freebsd"
+            ))]
             ButtonState::Signals { .. } => {
                 Line::styled(" Select Signal ", styles.widget_title_style)
             }
-            ButtonState::Simple { .. } => {
-                Line::styled(" Confirm Kill Process ", styles.widget_title_style)
-            }
+            ButtonState::Simple { .. } => Line::styled(
+                " Confirm Kill Process ",
+                styles.widget_title_style,
+            ),
         };
 
         let block = dialog_block(styles.border_type)
             .title_top(title)
-            .title_top(Line::styled(" Esc to close ", styles.widget_title_style).right_aligned())
+            .title_top(
+                Line::styled(" Esc to close ", styles.widget_title_style)
+                    .right_aligned(),
+            )
             .style(styles.border_style)
             .border_style(styles.border_style);
 
         let num_lines = text.line_count(block.inner(draw_area).width) as u16;
 
         match button_state {
-            #[cfg(any(target_os = "linux", target_os = "macos", target_os = "freebsd"))]
+            #[cfg(any(
+                target_os = "linux",
+                target_os = "macos",
+                target_os = "freebsd"
+            ))]
             ButtonState::Signals {
                 state,
                 last_button_draw_area,
@@ -698,10 +795,11 @@ impl ProcessKillDialog {
 
                 // Make the rect only as big as it needs to be, which is the height of the text,
                 // the buttons, and up to 2 spaces (margin and space between), and the size of the block.
-                let [draw_area] =
-                    Layout::vertical([Constraint::Max(num_lines + SIGNAL_TEXT_LEN + 2 + 3)])
-                        .flex(Flex::Center)
-                        .areas(draw_area);
+                let [draw_area] = Layout::vertical([Constraint::Max(
+                    num_lines + SIGNAL_TEXT_LEN + 2 + 3,
+                )])
+                .flex(Flex::Center)
+                .areas(draw_area);
 
                 // Now we need to divide the block into one area for the paragraph,
                 // and one for the buttons.
@@ -723,15 +821,17 @@ impl ProcessKillDialog {
                     .selected()
                     .expect("the list state should always be initialized with a selection!");
 
-                let buttons = List::new(SIGNAL_TEXT.iter().enumerate().map(|(index, &signal)| {
-                    let style = if index == selected {
-                        styles.selected_text_style
-                    } else {
-                        styles.text_style
-                    };
+                let buttons = List::new(SIGNAL_TEXT.iter().enumerate().map(
+                    |(index, &signal)| {
+                        let style = if index == selected {
+                            styles.selected_text_style
+                        } else {
+                            styles.text_style
+                        };
 
-                    Span::styled(signal, style)
-                }));
+                        Span::styled(signal, style)
+                    },
+                ));
 
                 // This is kinda dumb how you have to set the constraint, but ok.
                 const LONGEST_SIGNAL_TEXT_LENGTH: u16 = const {
@@ -747,9 +847,11 @@ impl ProcessKillDialog {
                     max as u16
                 };
                 let [button_draw_area] =
-                    Layout::horizontal([Constraint::Length(LONGEST_SIGNAL_TEXT_LENGTH)])
-                        .flex(Flex::Center)
-                        .areas(button_draw_area);
+                    Layout::horizontal([Constraint::Length(
+                        LONGEST_SIGNAL_TEXT_LENGTH,
+                    )])
+                    .flex(Flex::Center)
+                    .areas(button_draw_area);
 
                 *last_button_draw_area = button_draw_area;
                 f.render_stateful_widget(buttons, button_draw_area, state);
@@ -761,16 +863,19 @@ impl ProcessKillDialog {
             } => {
                 // Make the rect only as big as it needs to be, which is the height of the text,
                 // the buttons, and up to 3 spaces (margin and space between) + 2 for block.
-                let [draw_area] = Layout::vertical([Constraint::Max(num_lines + 1 + 3 + 2)])
-                    .flex(Flex::Center)
-                    .areas(draw_area);
+                let [draw_area] =
+                    Layout::vertical([Constraint::Max(num_lines + 1 + 3 + 2)])
+                        .flex(Flex::Center)
+                        .areas(draw_area);
 
                 // Now we need to divide the block into one area for the paragraph,
                 // and one for the buttons.
-                let [text_area, button_area] =
-                    Layout::vertical([Constraint::Max(num_lines), Constraint::Length(1)])
-                        .flex(Flex::SpaceEvenly)
-                        .areas(block.inner(draw_area));
+                let [text_area, button_area] = Layout::vertical([
+                    Constraint::Max(num_lines),
+                    Constraint::Length(1),
+                ])
+                .flex(Flex::SpaceEvenly)
+                .areas(block.inner(draw_area));
 
                 // Render things, starting from the block.
                 f.render_widget(block, draw_area);
@@ -789,9 +894,10 @@ impl ProcessKillDialog {
                     )
                 };
 
-                let [yes_area, no_area] = Layout::horizontal([Constraint::Length(3); 2])
-                    .flex(Flex::SpaceEvenly)
-                    .areas(button_area);
+                let [yes_area, no_area] =
+                    Layout::horizontal([Constraint::Length(3); 2])
+                        .flex(Flex::SpaceEvenly)
+                        .areas(button_area);
 
                 *last_yes_button_area = yes_area;
                 *last_no_button_area = no_area;
@@ -804,7 +910,8 @@ impl ProcessKillDialog {
 
     #[inline]
     fn draw_no_button_dialog(
-        &self, f: &mut Frame<'_>, draw_area: Rect, styles: &Styles, text: Text<'_>, title: Line<'_>,
+        &self, f: &mut Frame<'_>, draw_area: Rect, styles: &Styles,
+        text: Text<'_>, title: Line<'_>,
     ) {
         let text = Paragraph::new(text)
             .style(styles.text_style)
@@ -813,7 +920,10 @@ impl ProcessKillDialog {
 
         let block = dialog_block(styles.border_type)
             .title_top(title)
-            .title_top(Line::styled(" Esc to close ", styles.widget_title_style).right_aligned())
+            .title_top(
+                Line::styled(" Esc to close ", styles.widget_title_style)
+                    .right_aligned(),
+            )
             .style(styles.border_style)
             .border_style(styles.border_style);
 
@@ -823,20 +933,24 @@ impl ProcessKillDialog {
         // one, we want it to be shorter if possible.
         //
         // Note the +2 is for the margin, and another +2 for border.
-        let [draw_area] = Layout::vertical([Constraint::Max(num_lines + 2 + 2)])
-            .flex(Flex::Center)
-            .areas(draw_area);
+        let [draw_area] =
+            Layout::vertical([Constraint::Max(num_lines + 2 + 2)])
+                .flex(Flex::Center)
+                .areas(draw_area);
 
-        let [text_draw_area] = Layout::vertical([Constraint::Length(num_lines)])
-            .flex(Flex::Center)
-            .areas(block.inner(draw_area));
+        let [text_draw_area] =
+            Layout::vertical([Constraint::Length(num_lines)])
+                .flex(Flex::Center)
+                .areas(block.inner(draw_area));
 
         f.render_widget(block, draw_area);
         f.render_widget(text, text_draw_area);
     }
 
     /// Draw the [`ProcessKillDialog`].
-    pub fn draw(&mut self, f: &mut Frame<'_>, draw_area: Rect, styles: &Styles) {
+    pub fn draw(
+        &mut self, f: &mut Frame<'_>, draw_area: Rect, styles: &Styles,
+    ) {
         // The idea is:
         // - Use as big of a dialog box as needed (within the maximal draw loc)
         //  - So the non-button ones are going to be smaller... probably
@@ -845,9 +959,10 @@ impl ProcessKillDialog {
         //    "advanced" kill.
 
         const MAX_DIALOG_WIDTH: u16 = 100;
-        let [draw_area] = Layout::horizontal([Constraint::Max(MAX_DIALOG_WIDTH)])
-            .flex(Flex::Center)
-            .areas(draw_area);
+        let [draw_area] =
+            Layout::horizontal([Constraint::Max(MAX_DIALOG_WIDTH)])
+                .flex(Flex::Center)
+                .areas(draw_area);
 
         // FIXME: Add some colour to this!
         match &mut self.state {
@@ -863,9 +978,13 @@ impl ProcessKillDialog {
             } => {
                 let text = Text::from(vec![
                     if let Some(pid) = pid {
-                        format!("Failed to kill process {process_name} ({pid}):").into()
+                        format!(
+                            "Failed to kill process {process_name} ({pid}):"
+                        )
+                        .into()
                     } else {
-                        format!("Failed to kill process '{process_name}':").into()
+                        format!("Failed to kill process '{process_name}':")
+                            .into()
                     },
                     err.to_owned().into(),
                     "Please press ENTER or ESC to close this dialog.".into(),

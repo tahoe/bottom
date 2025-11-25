@@ -43,7 +43,9 @@ pub struct DataTable<DataType, Header, S = Unsortable, C = Column<Header>> {
     _pd: PhantomData<(DataType, S, Header)>,
 }
 
-impl<DataType: DataToCell<H>, H: ColumnHeader> DataTable<DataType, H, Unsortable, Column<H>> {
+impl<DataType: DataToCell<H>, H: ColumnHeader>
+    DataTable<DataType, H, Unsortable, Column<H>>
+{
     pub fn new<C: Into<Vec<Column<H>>>>(
         columns: C, props: DataTableProps, styling: DataTableStyling,
     ) -> Self {
@@ -61,8 +63,12 @@ impl<DataType: DataToCell<H>, H: ColumnHeader> DataTable<DataType, H, Unsortable
     }
 }
 
-impl<DataType: DataToCell<H>, H: ColumnHeader, S: SortType, C: DataTableColumn<H>>
-    DataTable<DataType, H, S, C>
+impl<
+    DataType: DataToCell<H>,
+    H: ColumnHeader,
+    S: SortType,
+    C: DataTableColumn<H>,
+> DataTable<DataType, H, S, C>
 {
     /// Sets the default value selected on first initialization, if possible.
     pub fn first_draw_index(mut self, first_index: usize) -> Self {
@@ -106,7 +112,9 @@ impl<DataType: DataToCell<H>, H: ColumnHeader, S: SortType, C: DataTableColumn<H
             return None;
         }
 
-        let Ok(current_index): Result<i64, _> = self.state.current_index.try_into() else {
+        let Ok(current_index): Result<i64, _> =
+            self.state.current_index.try_into()
+        else {
             return None;
         };
 
@@ -116,7 +124,8 @@ impl<DataType: DataToCell<H>, H: ColumnHeader, S: SortType, C: DataTableColumn<H
         let proposed = current_index + change;
 
         // We check num_entries > 0 above.
-        self.state.current_index = proposed.clamp(0, (num_entries - 1) as i64) as usize;
+        self.state.current_index =
+            proposed.clamp(0, (num_entries - 1) as i64) as usize;
 
         self.state.scroll_direction = if change < 0 {
             ScrollDirection::Up
@@ -129,7 +138,8 @@ impl<DataType: DataToCell<H>, H: ColumnHeader, S: SortType, C: DataTableColumn<H
 
     /// Updates the scroll position to a selected index.
     pub fn set_position(&mut self, new_index: usize) {
-        let new_index = new_index.clamp_upper(self.data.len().saturating_sub(1));
+        let new_index =
+            new_index.clamp_upper(self.data.len().saturating_sub(1));
         if self.state.current_index < new_index {
             self.state.scroll_direction = ScrollDirection::Down;
         } else if self.state.current_index > new_index {
@@ -200,7 +210,9 @@ mod test {
     #[test]
     fn test_scrolling() {
         let mut table = create_test_table();
-        table.set_data((0..=4).map(|index| TestType { index }).collect::<Vec<_>>());
+        table.set_data(
+            (0..=4).map(|index| TestType { index }).collect::<Vec<_>>(),
+        );
 
         table.scroll_to_last();
         assert_eq!(table.current_index(), 4);
@@ -214,7 +226,9 @@ mod test {
     #[test]
     fn test_set_position() {
         let mut table = create_test_table();
-        table.set_data((0..=4).map(|index| TestType { index }).collect::<Vec<_>>());
+        table.set_data(
+            (0..=4).map(|index| TestType { index }).collect::<Vec<_>>(),
+        );
 
         table.set_position(4);
         assert_eq!(table.current_index(), 4);
@@ -229,7 +243,9 @@ mod test {
     #[test]
     fn test_increment_position() {
         let mut table = create_test_table();
-        table.set_data((0..=4).map(|index| TestType { index }).collect::<Vec<_>>());
+        table.set_data(
+            (0..=4).map(|index| TestType { index }).collect::<Vec<_>>(),
+        );
 
         table.set_position(4);
         assert_eq!(table.current_index(), 4);
@@ -282,14 +298,18 @@ mod test {
     #[test]
     fn test_lose_data() {
         let mut table = create_test_table();
-        table.set_data((0..=4).map(|index| TestType { index }).collect::<Vec<_>>());
+        table.set_data(
+            (0..=4).map(|index| TestType { index }).collect::<Vec<_>>(),
+        );
 
         table.set_position(4);
         assert_eq!(table.current_index(), 4);
         assert_eq!(table.state.scroll_direction, ScrollDirection::Down);
         assert_eq!(table.current_item(), Some(&TestType { index: 4 }));
 
-        table.set_data((0..=2).map(|index| TestType { index }).collect::<Vec<_>>());
+        table.set_data(
+            (0..=2).map(|index| TestType { index }).collect::<Vec<_>>(),
+        );
         assert_eq!(table.current_index(), 2);
         assert_eq!(table.state.scroll_direction, ScrollDirection::Down);
         assert_eq!(table.current_item(), Some(&TestType { index: 2 }));

@@ -9,7 +9,8 @@ use humantime::parse_duration;
 use regex::Regex;
 
 use crate::{
-    collection::processes::ProcessHarvest, multi_eq_ignore_ascii_case, utils::data_units::*,
+    collection::processes::ProcessHarvest, multi_eq_ignore_ascii_case,
+    utils::data_units::*,
 };
 
 #[derive(Debug)]
@@ -78,7 +79,9 @@ pub(crate) fn parse_query(
     search_query: &str, is_searching_whole_word: bool, is_ignoring_case: bool,
     is_searching_with_regex: bool,
 ) -> QueryResult<ProcessQuery> {
-    fn process_string_to_filter(query: &mut VecDeque<String>) -> QueryResult<ProcessQuery> {
+    fn process_string_to_filter(
+        query: &mut VecDeque<String>,
+    ) -> QueryResult<ProcessQuery> {
         let lhs = process_or(query)?;
         let mut list_of_ors = vec![lhs];
 
@@ -137,7 +140,9 @@ pub(crate) fn parse_query(
                 rhs = Some(Box::new(process_prefix(query, false)?));
 
                 if let Some(next_queue_top) = query.front() {
-                    if AND_LIST.contains(&next_queue_top.to_lowercase().as_str()) {
+                    if AND_LIST
+                        .contains(&next_queue_top.to_lowercase().as_str())
+                    {
                         // Must merge LHS and RHS
                         lhs = Prefix {
                             or: Some(Box::new(Or {
@@ -202,7 +207,9 @@ pub(crate) fn parse_query(
         }
     }
 
-    fn process_prefix(query: &mut VecDeque<String>, inside_quotation: bool) -> QueryResult<Prefix> {
+    fn process_prefix(
+        query: &mut VecDeque<String>, inside_quotation: bool,
+    ) -> QueryResult<Prefix> {
         if let Some(queue_top) = query.pop_front() {
             if inside_quotation {
                 if queue_top == "\"" {
@@ -231,7 +238,10 @@ pub(crate) fn parse_query(
                     }
                     return Ok(Prefix {
                         or: None,
-                        regex_prefix: Some((PrefixType::Name, StringQuery::Value(quoted_string))),
+                        regex_prefix: Some((
+                            PrefixType::Name,
+                            StringQuery::Value(quoted_string),
+                        )),
                         compare_prefix: None,
                     });
                 }
@@ -252,7 +262,9 @@ pub(crate) fn parse_query(
 
                 // Ensure not empty
                 if list_of_ors.is_empty() {
-                    return Err(QueryError::new("No values within parentheses group"));
+                    return Err(QueryError::new(
+                        "No values within parentheses group",
+                    ));
                 }
 
                 // Now convert this back to a OR...
@@ -267,21 +279,22 @@ pub(crate) fn parse_query(
                     },
                     rhs: None,
                 };
-                let returned_or = list_of_ors.into_iter().fold(initial_or, |lhs, rhs| Or {
-                    lhs: And {
-                        lhs: Prefix {
-                            or: Some(Box::new(lhs)),
-                            compare_prefix: None,
-                            regex_prefix: None,
+                let returned_or =
+                    list_of_ors.into_iter().fold(initial_or, |lhs, rhs| Or {
+                        lhs: And {
+                            lhs: Prefix {
+                                or: Some(Box::new(lhs)),
+                                compare_prefix: None,
+                                regex_prefix: None,
+                            },
+                            rhs: Some(Box::new(Prefix {
+                                or: Some(Box::new(rhs)),
+                                compare_prefix: None,
+                                regex_prefix: None,
+                            })),
                         },
-                        rhs: Some(Box::new(Prefix {
-                            or: Some(Box::new(rhs)),
-                            compare_prefix: None,
-                            regex_prefix: None,
-                        })),
-                    },
-                    rhs: None,
-                });
+                        rhs: None,
+                    });
 
                 if let Some(close_paren) = query.pop_front() {
                     if close_paren == ")" {
@@ -291,7 +304,9 @@ pub(crate) fn parse_query(
                             compare_prefix: None,
                         });
                     } else {
-                        return Err(QueryError::new("Missing closing parentheses"));
+                        return Err(QueryError::new(
+                            "Missing closing parentheses",
+                        ));
                     }
                 } else {
                     return Err(QueryError::new("Missing closing parentheses"));
@@ -308,7 +323,9 @@ pub(crate) fn parse_query(
                     if close_paren == "\"" {
                         return Ok(prefix);
                     } else {
-                        return Err(QueryError::new("Missing closing quotation"));
+                        return Err(QueryError::new(
+                            "Missing closing quotation",
+                        ));
                     }
                 } else {
                     return Err(QueryError::new("Missing closing quotation"));
@@ -327,11 +344,16 @@ pub(crate) fn parse_query(
                         PrefixType::Name => {
                             return Ok(Prefix {
                                 or: None,
-                                regex_prefix: Some((prefix_type, StringQuery::Value(content))),
+                                regex_prefix: Some((
+                                    prefix_type,
+                                    StringQuery::Value(content),
+                                )),
                                 compare_prefix: None,
                             });
                         }
-                        PrefixType::Pid | PrefixType::State | PrefixType::User => {
+                        PrefixType::Pid
+                        | PrefixType::State
+                        | PrefixType::User => {
                             // We have to check if someone put an "="...
                             if content == "=" {
                                 // Check next string if possible
@@ -359,7 +381,10 @@ pub(crate) fn parse_query(
                             } else {
                                 return Ok(Prefix {
                                     or: None,
-                                    regex_prefix: Some((prefix_type, StringQuery::Value(content))),
+                                    regex_prefix: Some((
+                                        prefix_type,
+                                        StringQuery::Value(content),
+                                    )),
                                     compare_prefix: None,
                                 });
                             }
@@ -395,9 +420,12 @@ pub(crate) fn parse_query(
 
                             if let Some(condition) = condition {
                                 let duration = parse_duration(
-                                    &duration_string.ok_or(QueryError::missing_value())?,
+                                    &duration_string
+                                        .ok_or(QueryError::missing_value())?,
                                 )
-                                .map_err(|err| QueryError::new(err.to_string()))?;
+                                .map_err(|err| {
+                                    QueryError::new(err.to_string())
+                                })?;
 
                                 return Ok(Prefix {
                                     or: None,
@@ -437,10 +465,16 @@ pub(crate) fn parse_query(
                                         } else {
                                             QueryComparison::LessOrEqual
                                         });
-                                        if let Some(queue_next_next) = query.pop_front() {
-                                            value = queue_next_next.parse::<f64>().ok();
+                                        if let Some(queue_next_next) =
+                                            query.pop_front()
+                                        {
+                                            value = queue_next_next
+                                                .parse::<f64>()
+                                                .ok();
                                         } else {
-                                            return Err(QueryError::missing_value());
+                                            return Err(
+                                                QueryError::missing_value(),
+                                            );
                                         }
                                     } else {
                                         condition = Some(if content == ">" {
@@ -469,11 +503,15 @@ pub(crate) fn parse_query(
                                         | PrefixType::Wps
                                         | PrefixType::TRead
                                         | PrefixType::TWrite => {
-                                            process_prefix_units(query, &mut value);
+                                            process_prefix_units(
+                                                query, &mut value,
+                                            );
                                         }
                                         #[cfg(feature = "gpu")]
                                         PrefixType::GMem => {
-                                            process_prefix_units(query, &mut value);
+                                            process_prefix_units(
+                                                query, &mut value,
+                                            );
                                         }
                                         _ => {}
                                     }
@@ -483,10 +521,12 @@ pub(crate) fn parse_query(
                                         regex_prefix: None,
                                         compare_prefix: Some((
                                             prefix_type,
-                                            ComparableQuery::Numerical(NumericalQuery {
-                                                condition,
-                                                value,
-                                            }),
+                                            ComparableQuery::Numerical(
+                                                NumericalQuery {
+                                                    condition,
+                                                    value,
+                                                },
+                                            ),
                                         )),
                                     });
                                 }
@@ -494,7 +534,9 @@ pub(crate) fn parse_query(
                         }
                     }
                 } else {
-                    return Err(QueryError::new("Missing argument for search prefix"));
+                    return Err(QueryError::new(
+                        "Missing argument for search prefix",
+                    ));
                 }
             }
         } else if inside_quotation {
@@ -510,7 +552,8 @@ pub(crate) fn parse_query(
     search_query.split_whitespace().for_each(|s| {
         // From https://stackoverflow.com/a/56923739 in order to get a split, but include the parentheses
         let mut last = 0;
-        for (index, matched) in s.match_indices(|x| DELIMITER_LIST.contains(&x)) {
+        for (index, matched) in s.match_indices(|x| DELIMITER_LIST.contains(&x))
+        {
             if last != index {
                 split_query.push_back(s[last..index].to_owned());
             }
@@ -553,7 +596,9 @@ impl ProcessQuery {
         Ok(())
     }
 
-    pub(crate) fn check(&self, process: &ProcessHarvest, is_using_command: bool) -> bool {
+    pub(crate) fn check(
+        &self, process: &ProcessHarvest, is_using_command: bool,
+    ) -> bool {
         self.query
             .iter()
             .all(|ok| ok.check(process, is_using_command))
@@ -595,7 +640,8 @@ impl Or {
 
     fn check(&self, process: &ProcessHarvest, is_using_command: bool) -> bool {
         if let Some(rhs) = &self.rhs {
-            self.lhs.check(process, is_using_command) || rhs.check(process, is_using_command)
+            self.lhs.check(process, is_using_command)
+                || rhs.check(process, is_using_command)
         } else {
             self.lhs.check(process, is_using_command)
         }
@@ -605,7 +651,9 @@ impl Or {
 impl Debug for Or {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self.rhs {
-            Some(rhs) => f.write_fmt(format_args!("({:?} OR {:?})", self.lhs, rhs)),
+            Some(rhs) => {
+                f.write_fmt(format_args!("({:?} OR {:?})", self.lhs, rhs))
+            }
             None => f.write_fmt(format_args!("{:?}", self.lhs)),
         }
     }
@@ -640,7 +688,8 @@ impl And {
 
     fn check(&self, process: &ProcessHarvest, is_using_command: bool) -> bool {
         if let Some(rhs) = &self.rhs {
-            self.lhs.check(process, is_using_command) && rhs.check(process, is_using_command)
+            self.lhs.check(process, is_using_command)
+                && rhs.check(process, is_using_command)
         } else {
             self.lhs.check(process, is_using_command)
         }
@@ -650,7 +699,9 @@ impl And {
 impl Debug for And {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self.rhs {
-            Some(rhs) => f.write_fmt(format_args!("({:?} AND {:?})", self.lhs, rhs)),
+            Some(rhs) => {
+                f.write_fmt(format_args!("({:?} AND {:?})", self.lhs, rhs))
+            }
             None => f.write_fmt(format_args!("{:?}", self.lhs)),
         }
     }
@@ -747,7 +798,10 @@ impl Prefix {
                 is_searching_with_regex,
             );
         } else if let Some((
-            PrefixType::Pid | PrefixType::Name | PrefixType::State | PrefixType::User,
+            PrefixType::Pid
+            | PrefixType::Name
+            | PrefixType::State
+            | PrefixType::User,
             StringQuery::Value(regex_string),
         )) = &mut self.regex_prefix
         {
@@ -793,7 +847,9 @@ impl Prefix {
             }
         }
 
-        fn matches_duration(condition: &QueryComparison, lhs: Duration, rhs: Duration) -> bool {
+        fn matches_duration(
+            condition: &QueryComparison, lhs: Duration, rhs: Duration,
+        ) -> bool {
             match condition {
                 QueryComparison::Equal => lhs == rhs,
                 QueryComparison::Less => lhs < rhs,
@@ -813,7 +869,9 @@ impl Prefix {
                     } else {
                         process.name.as_str()
                     }),
-                    PrefixType::Pid => r.is_match(process.pid.to_string().as_str()),
+                    PrefixType::Pid => {
+                        r.is_match(process.pid.to_string().as_str())
+                    }
                     PrefixType::State => r.is_match(process.process_state.0),
                     PrefixType::User => match process.user.as_ref() {
                         Some(user) => r.is_match(user),
@@ -824,68 +882,74 @@ impl Prefix {
             } else {
                 true
             }
-        } else if let Some((prefix_type, comparable_query)) = &self.compare_prefix {
+        } else if let Some((prefix_type, comparable_query)) =
+            &self.compare_prefix
+        {
             match comparable_query {
-                ComparableQuery::Numerical(numerical_query) => match prefix_type {
-                    PrefixType::PCpu => matches_condition(
-                        &numerical_query.condition,
-                        process.cpu_usage_percent,
-                        numerical_query.value,
-                    ),
-                    PrefixType::PMem => matches_condition(
-                        &numerical_query.condition,
-                        process.mem_usage_percent,
-                        numerical_query.value,
-                    ),
-                    PrefixType::MemBytes => matches_condition(
-                        &numerical_query.condition,
-                        process.mem_usage as f64,
-                        numerical_query.value,
-                    ),
-                    PrefixType::Rps => matches_condition(
-                        &numerical_query.condition,
-                        process.read_per_sec as f64,
-                        numerical_query.value,
-                    ),
-                    PrefixType::Wps => matches_condition(
-                        &numerical_query.condition,
-                        process.write_per_sec as f64,
-                        numerical_query.value,
-                    ),
-                    PrefixType::TRead => matches_condition(
-                        &numerical_query.condition,
-                        process.total_read as f64,
-                        numerical_query.value,
-                    ),
-                    PrefixType::TWrite => matches_condition(
-                        &numerical_query.condition,
-                        process.total_write as f64,
-                        numerical_query.value,
-                    ),
-                    #[cfg(feature = "gpu")]
-                    PrefixType::PGpu => matches_condition(
-                        &numerical_query.condition,
-                        process.gpu_util,
-                        numerical_query.value,
-                    ),
-                    #[cfg(feature = "gpu")]
-                    PrefixType::GMem => matches_condition(
-                        &numerical_query.condition,
-                        process.gpu_mem as f64,
-                        numerical_query.value,
-                    ),
-                    #[cfg(feature = "gpu")]
-                    PrefixType::PGMem => matches_condition(
-                        &numerical_query.condition,
-                        process.gpu_mem_percent,
-                        numerical_query.value,
-                    ),
-                    _ => true,
-                },
-                ComparableQuery::Time(time_query) => match prefix_type {
-                    PrefixType::Time => {
-                        matches_duration(&time_query.condition, process.time, time_query.duration)
+                ComparableQuery::Numerical(numerical_query) => {
+                    match prefix_type {
+                        PrefixType::PCpu => matches_condition(
+                            &numerical_query.condition,
+                            process.cpu_usage_percent,
+                            numerical_query.value,
+                        ),
+                        PrefixType::PMem => matches_condition(
+                            &numerical_query.condition,
+                            process.mem_usage_percent,
+                            numerical_query.value,
+                        ),
+                        PrefixType::MemBytes => matches_condition(
+                            &numerical_query.condition,
+                            process.mem_usage as f64,
+                            numerical_query.value,
+                        ),
+                        PrefixType::Rps => matches_condition(
+                            &numerical_query.condition,
+                            process.read_per_sec as f64,
+                            numerical_query.value,
+                        ),
+                        PrefixType::Wps => matches_condition(
+                            &numerical_query.condition,
+                            process.write_per_sec as f64,
+                            numerical_query.value,
+                        ),
+                        PrefixType::TRead => matches_condition(
+                            &numerical_query.condition,
+                            process.total_read as f64,
+                            numerical_query.value,
+                        ),
+                        PrefixType::TWrite => matches_condition(
+                            &numerical_query.condition,
+                            process.total_write as f64,
+                            numerical_query.value,
+                        ),
+                        #[cfg(feature = "gpu")]
+                        PrefixType::PGpu => matches_condition(
+                            &numerical_query.condition,
+                            process.gpu_util,
+                            numerical_query.value,
+                        ),
+                        #[cfg(feature = "gpu")]
+                        PrefixType::GMem => matches_condition(
+                            &numerical_query.condition,
+                            process.gpu_mem as f64,
+                            numerical_query.value,
+                        ),
+                        #[cfg(feature = "gpu")]
+                        PrefixType::PGMem => matches_condition(
+                            &numerical_query.condition,
+                            process.gpu_mem_percent,
+                            numerical_query.value,
+                        ),
+                        _ => true,
                     }
+                }
+                ComparableQuery::Time(time_query) => match prefix_type {
+                    PrefixType::Time => matches_duration(
+                        &time_query.condition,
+                        process.time,
+                        time_query.duration,
+                    ),
                     _ => true,
                 },
             }

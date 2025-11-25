@@ -49,8 +49,12 @@ impl ProcColumn {
             ProcColumn::Command => &["Command"],
             ProcColumn::CpuPercent => &["CPU%"],
             // TODO: Change this
-            ProcColumn::MemValue | ProcColumn::MemPercent => &["Mem", "Mem%", "Memory", "Memory%"],
-            ProcColumn::VirtualMem => &["Virt", "Virtual", "VirtMem", "Virtual Memory"],
+            ProcColumn::MemValue | ProcColumn::MemPercent => {
+                &["Mem", "Mem%", "Memory", "Memory%"]
+            }
+            ProcColumn::VirtualMem => {
+                &["Virt", "Virtual", "VirtMem", "Virtual Memory"]
+            }
             ProcColumn::ReadPerSecond => &["R/s", "Read", "Rps"],
             ProcColumn::WritePerSecond => &["W/s", "Write", "Wps"],
             ProcColumn::TotalRead => &["T.Read", "TRead", "Total Read"],
@@ -60,7 +64,9 @@ impl ProcColumn {
             ProcColumn::Time => &["Time"],
             #[cfg(feature = "gpu")]
             // TODO: Change this
-            ProcColumn::GpuMemValue | ProcColumn::GpuMemPercent => &["GMem", "GMem%"],
+            ProcColumn::GpuMemValue | ProcColumn::GpuMemPercent => {
+                &["GMem", "GMem%"]
+            }
             #[cfg(feature = "gpu")]
             ProcColumn::GpuUtilPercent => &["GPU%"],
         }
@@ -115,20 +121,29 @@ impl SortsRow for ProcColumn {
         match self {
             ProcColumn::CpuPercent => {
                 data.sort_by(|a, b| {
-                    sort_partial_fn(descending)(a.cpu_usage_percent, b.cpu_usage_percent)
+                    sort_partial_fn(descending)(
+                        a.cpu_usage_percent,
+                        b.cpu_usage_percent,
+                    )
                 });
             }
             ProcColumn::MemValue | ProcColumn::MemPercent => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.mem_usage, &b.mem_usage));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.mem_usage, &b.mem_usage)
+                });
             }
             ProcColumn::VirtualMem => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.virtual_mem, &b.virtual_mem));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.virtual_mem, &b.virtual_mem)
+                });
             }
             ProcColumn::Pid => {
                 data.sort_by(|a, b| sort_partial_fn(descending)(a.pid, b.pid));
             }
             ProcColumn::Count => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(a.num_similar, b.num_similar));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(a.num_similar, b.num_similar)
+                });
             }
             ProcColumn::Name | ProcColumn::Command => {
                 if descending {
@@ -144,10 +159,14 @@ impl SortsRow for ProcColumn {
                 data.sort_by(|a, b| sort_partial_fn(descending)(a.wps, b.wps));
             }
             ProcColumn::TotalRead => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(a.total_read, b.total_read));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(a.total_read, b.total_read)
+                });
             }
             ProcColumn::TotalWrite => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(a.total_write, b.total_write));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(a.total_write, b.total_write)
+                });
             }
             ProcColumn::State => {
                 if descending {
@@ -165,17 +184,24 @@ impl SortsRow for ProcColumn {
                 }
             }
             ProcColumn::Time => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(a.time, b.time));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(a.time, b.time)
+                });
             }
             #[cfg(feature = "gpu")]
             ProcColumn::GpuMemValue | ProcColumn::GpuMemPercent => {
                 data.sort_by(|a, b| {
-                    sort_partial_fn(descending)(&a.gpu_mem_usage, &b.gpu_mem_usage)
+                    sort_partial_fn(descending)(
+                        &a.gpu_mem_usage,
+                        &b.gpu_mem_usage,
+                    )
                 });
             }
             #[cfg(feature = "gpu")]
             ProcColumn::GpuUtilPercent => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(a.gpu_usage, b.gpu_usage));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(a.gpu_usage, b.gpu_usage)
+                });
             }
         }
     }
@@ -191,7 +217,9 @@ impl<'de> Deserialize<'de> for ProcColumn {
             "cpu%" => Ok(ProcColumn::CpuPercent),
             // TODO: Maybe change this in the future.
             "mem" | "mem%" => Ok(ProcColumn::MemPercent),
-            "virt" | "virtual" | "virtmem" | "virtual memory" => Ok(ProcColumn::VirtualMem),
+            "virt" | "virtual" | "virtmem" | "virtual memory" => {
+                Ok(ProcColumn::VirtualMem)
+            }
             "pid" => Ok(ProcColumn::Pid),
             "count" => Ok(ProcColumn::Count),
             "name" => Ok(ProcColumn::Name),
@@ -219,9 +247,13 @@ impl From<&ProcColumn> for ProcWidgetColumn {
     fn from(value: &ProcColumn) -> Self {
         match value {
             ProcColumn::Pid | ProcColumn::Count => ProcWidgetColumn::PidOrCount,
-            ProcColumn::Name | ProcColumn::Command => ProcWidgetColumn::ProcNameOrCommand,
+            ProcColumn::Name | ProcColumn::Command => {
+                ProcWidgetColumn::ProcNameOrCommand
+            }
             ProcColumn::CpuPercent => ProcWidgetColumn::Cpu,
-            ProcColumn::MemPercent | ProcColumn::MemValue => ProcWidgetColumn::Mem,
+            ProcColumn::MemPercent | ProcColumn::MemValue => {
+                ProcWidgetColumn::Mem
+            }
             ProcColumn::VirtualMem => ProcWidgetColumn::VirtualMem,
             ProcColumn::ReadPerSecond => ProcWidgetColumn::ReadPerSecond,
             ProcColumn::WritePerSecond => ProcWidgetColumn::WritePerSecond,
@@ -231,7 +263,9 @@ impl From<&ProcColumn> for ProcWidgetColumn {
             ProcColumn::User => ProcWidgetColumn::User,
             ProcColumn::Time => ProcWidgetColumn::Time,
             #[cfg(feature = "gpu")]
-            ProcColumn::GpuMemPercent | ProcColumn::GpuMemValue => ProcWidgetColumn::GpuMem,
+            ProcColumn::GpuMemPercent | ProcColumn::GpuMemValue => {
+                ProcWidgetColumn::GpuMem
+            }
             #[cfg(feature = "gpu")]
             ProcColumn::GpuUtilPercent => ProcWidgetColumn::GpuUtil,
         }

@@ -16,7 +16,9 @@ use crate::{
 };
 
 /// Calculate how many bars are to be drawn within basic mode's components.
-fn calculate_basic_use_bars(use_percentage: f64, num_bars_available: usize) -> usize {
+fn calculate_basic_use_bars(
+    use_percentage: f64, num_bars_available: usize,
+) -> usize {
     min(
         (num_bars_available as f64 * use_percentage / 100.0).round() as usize,
         num_bars_available,
@@ -25,7 +27,8 @@ fn calculate_basic_use_bars(use_percentage: f64, num_bars_available: usize) -> u
 
 impl Painter {
     pub fn draw_battery(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
         let should_get_widget_bounds = app_state.should_get_widget_bounds();
         if let Some(battery_widget_state) = app_state
@@ -53,19 +56,26 @@ impl Painter {
                     self.styles.border_type,
                 )
                 .border_style(border_style)
-                .title_top(Line::styled(" Battery ", self.styles.widget_title_style));
+                .title_top(Line::styled(
+                    " Battery ",
+                    self.styles.widget_title_style,
+                ));
 
                 if app_state.is_expanded {
                     block = block.title_top(
-                        Line::styled(" Esc to go back ", self.styles.widget_title_style)
-                            .right_aligned(),
+                        Line::styled(
+                            " Esc to go back ",
+                            self.styles.widget_title_style,
+                        )
+                        .right_aligned(),
                     )
                 }
 
                 block
             };
 
-            let battery_harvest = &(app_state.data_store.get_data().battery_harvest);
+            let battery_harvest =
+                &(app_state.data_store.get_data().battery_harvest);
             if battery_harvest.len() > 1 {
                 let battery_names = battery_harvest
                     .iter()
@@ -92,19 +102,25 @@ impl Painter {
                     .divider(tui::symbols::line::VERTICAL)
                     .style(self.styles.text_style)
                     .highlight_style(self.styles.selected_text_style)
-                    .select(battery_widget_state.currently_selected_battery_index),
+                    .select(
+                        battery_widget_state.currently_selected_battery_index,
+                    ),
                     tab_draw_loc,
                 );
 
                 if should_get_widget_bounds {
                     let mut current_x = tab_draw_loc.x;
                     let current_y = tab_draw_loc.y;
-                    let mut tab_click_locs: Vec<((u16, u16), (u16, u16))> = vec![];
+                    let mut tab_click_locs: Vec<((u16, u16), (u16, u16))> =
+                        vec![];
                     for battery in battery_names {
                         // +1 because there's a space after the tab label.
-                        let width = UnicodeWidthStr::width(battery.as_str()) as u16;
-                        tab_click_locs
-                            .push(((current_x, current_y), (current_x + width, current_y)));
+                        let width =
+                            UnicodeWidthStr::width(battery.as_str()) as u16;
+                        tab_click_locs.push((
+                            (current_x, current_y),
+                            (current_x + width, current_y),
+                        ));
 
                         // +4 because we want to go one space, then one space past to get to the
                         // '|', then 2 more to start at the blank space
@@ -123,14 +139,15 @@ impl Painter {
                 .direction(Direction::Horizontal)
                 .areas(draw_loc);
 
-            if let Some(battery_details) =
-                battery_harvest.get(battery_widget_state.currently_selected_battery_index)
+            if let Some(battery_details) = battery_harvest
+                .get(battery_widget_state.currently_selected_battery_index)
             {
                 let full_width = draw_loc.width.saturating_sub(2);
                 let bar_length = usize::from(full_width.saturating_sub(6));
                 let charge_percent = battery_details.charge_percent;
 
-                let num_bars = calculate_basic_use_bars(charge_percent, bar_length);
+                let num_bars =
+                    calculate_basic_use_bars(charge_percent, bar_length);
                 let bars = format!(
                     "[{}{}{:3.0}%]",
                     "|".repeat(num_bars),
@@ -157,8 +174,10 @@ impl Painter {
                 let health = battery_details.health();
 
                 battery_rows.push(Row::new([""]).bottom_margin(table_gap + 1));
-                battery_rows
-                    .push(Row::new(["Rate", &watt_consumption]).style(self.styles.text_style));
+                battery_rows.push(
+                    Row::new(["Rate", &watt_consumption])
+                        .style(self.styles.text_style),
+                );
 
                 battery_rows.push(
                     Row::new(["State", battery_details.state.as_str()])
@@ -177,10 +196,15 @@ impl Painter {
                             time = long_time(*secs);
 
                             if time_width >= time.len() {
-                                battery_rows.push(Row::new(["Time to full", &time]).style(style));
+                                battery_rows.push(
+                                    Row::new(["Time to full", &time])
+                                        .style(style),
+                                );
                             } else {
                                 time = short_time(*secs);
-                                battery_rows.push(Row::new(["To full", &time]).style(style));
+                                battery_rows.push(
+                                    Row::new(["To full", &time]).style(style),
+                                );
                             }
                         }
                         BatteryState::Discharging {
@@ -189,17 +213,24 @@ impl Painter {
                             time = long_time(*secs);
 
                             if time_width >= time.len() {
-                                battery_rows.push(Row::new(["Time to empty", &time]).style(style));
+                                battery_rows.push(
+                                    Row::new(["Time to empty", &time])
+                                        .style(style),
+                                );
                             } else {
                                 time = short_time(*secs);
-                                battery_rows.push(Row::new(["To empty", &time]).style(style));
+                                battery_rows.push(
+                                    Row::new(["To empty", &time]).style(style),
+                                );
                             }
                         }
                         _ => {}
                     }
                 }
 
-                battery_rows.push(Row::new(["Health", &health]).style(self.styles.text_style));
+                battery_rows.push(
+                    Row::new(["Health", &health]).style(self.styles.text_style),
+                );
 
                 let header = if battery_harvest.len() > 1 {
                     Row::new([""]).bottom_margin(table_gap)
@@ -209,9 +240,12 @@ impl Painter {
 
                 // Draw bar
                 f.render_widget(
-                    Table::new(battery_charge_rows, [Constraint::Percentage(100)])
-                        .block(block.clone())
-                        .header(header.clone()),
+                    Table::new(
+                        battery_charge_rows,
+                        [Constraint::Percentage(100)],
+                    )
+                    .block(block.clone())
+                    .header(header.clone()),
                     margined_draw_loc,
                 );
 
@@ -219,7 +253,10 @@ impl Painter {
                 f.render_widget(
                     Table::new(
                         battery_rows,
-                        [Constraint::Percentage(50), Constraint::Percentage(50)],
+                        [
+                            Constraint::Percentage(50),
+                            Constraint::Percentage(50),
+                        ],
                     )
                     .block(block)
                     .header(header),
@@ -233,13 +270,17 @@ impl Painter {
                     self.styles.text_style,
                 )));
 
-                f.render_widget(Paragraph::new(contents).block(block), margined_draw_loc);
+                f.render_widget(
+                    Paragraph::new(contents).block(block),
+                    margined_draw_loc,
+                );
             }
 
             if should_get_widget_bounds {
                 // Update draw loc in widget map
                 if let Some(widget) = app_state.widget_map.get_mut(&widget_id) {
-                    widget.top_left_corner = Some((margined_draw_loc.x, margined_draw_loc.y));
+                    widget.top_left_corner =
+                        Some((margined_draw_loc.x, margined_draw_loc.y));
                     widget.bottom_right_corner = Some((
                         margined_draw_loc.x + margined_draw_loc.width,
                         margined_draw_loc.y + margined_draw_loc.height,

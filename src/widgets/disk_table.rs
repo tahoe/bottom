@@ -5,8 +5,9 @@ use serde::Deserialize;
 use crate::{
     app::{AppConfigFields, data::StoredData},
     canvas::components::data_table::{
-        ColumnHeader, DataTableColumn, DataTableProps, DataTableStyling, DataToCell, SortColumn,
-        SortDataTable, SortDataTableProps, SortOrder, SortsRow,
+        ColumnHeader, DataTableColumn, DataTableProps, DataTableStyling,
+        DataToCell, SortColumn, SortDataTable, SortDataTableProps, SortOrder,
+        SortsRow,
     },
     options::config::style::Styles,
     utils::{
@@ -31,7 +32,8 @@ impl DiskWidgetData {
     fn total_space(&self) -> Cow<'static, str> {
         if let Some(total_bytes) = self.total_bytes {
             let converted_total_space = get_decimal_bytes(total_bytes);
-            format!("{:.0}{}", converted_total_space.0, converted_total_space.1).into()
+            format!("{:.0}{}", converted_total_space.0, converted_total_space.1)
+                .into()
         } else {
             "N/A".into()
         }
@@ -40,7 +42,8 @@ impl DiskWidgetData {
     fn free_space(&self) -> Cow<'static, str> {
         if let Some(free_bytes) = self.free_bytes {
             let converted_free_space = get_decimal_bytes(free_bytes);
-            format!("{:.0}{}", converted_free_space.0, converted_free_space.1).into()
+            format!("{:.0}{}", converted_free_space.0, converted_free_space.1)
+                .into()
         } else {
             "N/A".into()
         }
@@ -49,7 +52,8 @@ impl DiskWidgetData {
     fn used_space(&self) -> Cow<'static, str> {
         if let Some(used_bytes) = self.used_bytes {
             let converted_free_space = get_decimal_bytes(used_bytes);
-            format!("{:.0}{}", converted_free_space.0, converted_free_space.1).into()
+            format!("{:.0}{}", converted_free_space.0, converted_free_space.1)
+                .into()
         } else {
             "N/A".into()
         }
@@ -199,7 +203,9 @@ impl DataToCell<DiskColumn> for DiskWidgetData {
         Some(text)
     }
 
-    fn column_widths<C: DataTableColumn<DiskColumn>>(data: &[Self], _columns: &[C]) -> Vec<u16>
+    fn column_widths<C: DataTableColumn<DiskColumn>>(
+        data: &[Self], _columns: &[C],
+    ) -> Vec<u16>
     where
         Self: Sized,
     {
@@ -225,38 +231,60 @@ impl SortsRow for DiskColumn {
     fn sort_data(&self, data: &mut [Self::DataType], descending: bool) {
         match self {
             DiskColumn::Disk => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.name, &b.name));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.name, &b.name)
+                });
             }
             DiskColumn::Mount => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.mount_point, &b.mount_point));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.mount_point, &b.mount_point)
+                });
             }
             DiskColumn::Used => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.used_bytes, &b.used_bytes));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.used_bytes, &b.used_bytes)
+                });
             }
             DiskColumn::UsedPercent => {
                 data.sort_by(|a, b| {
-                    sort_partial_fn(descending)(&a.used_percent(), &b.used_percent())
+                    sort_partial_fn(descending)(
+                        &a.used_percent(),
+                        &b.used_percent(),
+                    )
                 });
             }
             DiskColumn::Free => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.free_bytes, &b.free_bytes));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.free_bytes, &b.free_bytes)
+                });
             }
             DiskColumn::FreePercent => {
                 data.sort_by(|a, b| {
-                    sort_partial_fn(descending)(&a.free_percent(), &b.free_percent())
+                    sort_partial_fn(descending)(
+                        &a.free_percent(),
+                        &b.free_percent(),
+                    )
                 });
             }
             DiskColumn::Total => {
-                data.sort_by(|a, b| sort_partial_fn(descending)(&a.total_bytes, &b.total_bytes));
+                data.sort_by(|a, b| {
+                    sort_partial_fn(descending)(&a.total_bytes, &b.total_bytes)
+                });
             }
             DiskColumn::IoRead => {
                 data.sort_by(|a, b| {
-                    sort_partial_fn(descending)(&a.io_read_rate_bytes, &b.io_read_rate_bytes)
+                    sort_partial_fn(descending)(
+                        &a.io_read_rate_bytes,
+                        &b.io_read_rate_bytes,
+                    )
                 });
             }
             DiskColumn::IoWrite => {
                 data.sort_by(|a, b| {
-                    sort_partial_fn(descending)(&a.io_write_rate_bytes, &b.io_write_rate_bytes)
+                    sort_partial_fn(descending)(
+                        &a.io_write_rate_bytes,
+                        &b.io_write_rate_bytes,
+                    )
                 });
             }
         }
@@ -267,17 +295,27 @@ const fn create_column(column_type: &DiskColumn) -> SortColumn<DiskColumn> {
     match column_type {
         DiskColumn::Disk => SortColumn::soft(DiskColumn::Disk, Some(0.2)),
         DiskColumn::Mount => SortColumn::soft(DiskColumn::Mount, Some(0.2)),
-        DiskColumn::Used => SortColumn::hard(DiskColumn::Used, 8).default_descending(),
-        DiskColumn::Free => SortColumn::hard(DiskColumn::Free, 8).default_descending(),
-        DiskColumn::Total => SortColumn::hard(DiskColumn::Total, 9).default_descending(),
+        DiskColumn::Used => {
+            SortColumn::hard(DiskColumn::Used, 8).default_descending()
+        }
+        DiskColumn::Free => {
+            SortColumn::hard(DiskColumn::Free, 8).default_descending()
+        }
+        DiskColumn::Total => {
+            SortColumn::hard(DiskColumn::Total, 9).default_descending()
+        }
         DiskColumn::UsedPercent => {
             SortColumn::hard(DiskColumn::UsedPercent, 9).default_descending()
         }
         DiskColumn::FreePercent => {
             SortColumn::hard(DiskColumn::FreePercent, 9).default_descending()
         }
-        DiskColumn::IoRead => SortColumn::hard(DiskColumn::IoRead, 10).default_descending(),
-        DiskColumn::IoWrite => SortColumn::hard(DiskColumn::IoWrite, 11).default_descending(),
+        DiskColumn::IoRead => {
+            SortColumn::hard(DiskColumn::IoRead, 10).default_descending()
+        }
+        DiskColumn::IoWrite => {
+            SortColumn::hard(DiskColumn::IoWrite, 11).default_descending()
+        }
     }
 }
 
@@ -295,7 +333,10 @@ const fn default_disk_columns() -> [SortColumn<DiskColumn>; 8] {
 }
 
 impl DiskTableWidget {
-    pub fn new(config: &AppConfigFields, palette: &Styles, columns: Option<&[DiskColumn]>) -> Self {
+    pub fn new(
+        config: &AppConfigFields, palette: &Styles,
+        columns: Option<&[DiskColumn]>,
+    ) -> Self {
         let props = SortDataTableProps {
             inner: DataTableProps {
                 title: Some(" Disks ".into()),
@@ -313,14 +354,19 @@ impl DiskTableWidget {
 
         match columns {
             Some(columns) => {
-                let columns = columns.iter().map(create_column).collect::<Vec<_>>();
+                let columns =
+                    columns.iter().map(create_column).collect::<Vec<_>>();
                 Self {
                     table: SortDataTable::new_sortable(columns, props, styling),
                     force_update_data: false,
                 }
             }
             None => Self {
-                table: SortDataTable::new_sortable(default_disk_columns(), props, styling),
+                table: SortDataTable::new_sortable(
+                    default_disk_columns(),
+                    props,
+                    styling,
+                ),
                 force_update_data: false,
             },
         }

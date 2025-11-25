@@ -2,7 +2,9 @@
 
 use std::sync::mpsc::Sender;
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
+use crossterm::event::{
+    KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind,
+};
 
 use crate::{
     app::{App, layout_manager::WidgetDirection},
@@ -51,7 +53,8 @@ pub fn handle_mouse_event(event: MouseEvent, app: &mut App) {
 
 /// Handle a [`KeyEvent`].
 pub fn handle_key_event_or_break(
-    event: KeyEvent, app: &mut App, reset_sender: &Sender<CollectionThreadEvent>,
+    event: KeyEvent, app: &mut App,
+    reset_sender: &Sender<CollectionThreadEvent>,
 ) -> bool {
     // c_debug!("KeyEvent: {event:?}");
 
@@ -64,7 +67,9 @@ pub fn handle_key_event_or_break(
             KeyCode::Down => app.on_down_key(),
             KeyCode::Left => app.on_left_key(),
             KeyCode::Right => app.on_right_key(),
-            KeyCode::Char(' ') if !app.is_in_search_widget() => app.on_space_key(),
+            KeyCode::Char(' ') if !app.is_in_search_widget() => {
+                app.on_space_key()
+            }
             KeyCode::Char(caught_char) => app.on_char_key(caught_char),
             KeyCode::Esc => app.on_esc(),
             KeyCode::Enter => app.on_enter(),
@@ -85,9 +90,15 @@ pub fn handle_key_event_or_break(
         // Otherwise, track the modifier as well...
         if let KeyModifiers::ALT = event.modifiers {
             match event.code {
-                KeyCode::Char('c') | KeyCode::Char('C') => app.toggle_ignore_case(),
-                KeyCode::Char('w') | KeyCode::Char('W') => app.toggle_search_whole_word(),
-                KeyCode::Char('r') | KeyCode::Char('R') => app.toggle_search_regex(),
+                KeyCode::Char('c') | KeyCode::Char('C') => {
+                    app.toggle_ignore_case()
+                }
+                KeyCode::Char('w') | KeyCode::Char('W') => {
+                    app.toggle_search_whole_word()
+                }
+                KeyCode::Char('r') | KeyCode::Char('R') => {
+                    app.toggle_search_regex()
+                }
                 KeyCode::Char('h') => app.on_left_key(),
                 KeyCode::Char('l') => app.on_right_key(),
                 _ => {}
@@ -99,10 +110,16 @@ pub fn handle_key_event_or_break(
 
             match event.code {
                 KeyCode::Char('f') => app.on_slash(),
-                KeyCode::Left => app.move_widget_selection(&WidgetDirection::Left),
-                KeyCode::Right => app.move_widget_selection(&WidgetDirection::Right),
+                KeyCode::Left => {
+                    app.move_widget_selection(&WidgetDirection::Left)
+                }
+                KeyCode::Right => {
+                    app.move_widget_selection(&WidgetDirection::Right)
+                }
                 KeyCode::Up => app.move_widget_selection(&WidgetDirection::Up),
-                KeyCode::Down => app.move_widget_selection(&WidgetDirection::Down),
+                KeyCode::Down => {
+                    app.move_widget_selection(&WidgetDirection::Down)
+                }
                 KeyCode::Char('r') => {
                     if reset_sender.send(CollectionThreadEvent::Reset).is_ok() {
                         app.reset();
@@ -110,7 +127,9 @@ pub fn handle_key_event_or_break(
                 }
                 KeyCode::Char('a') => app.skip_cursor_beginning(),
                 KeyCode::Char('e') => app.skip_cursor_end(),
-                KeyCode::Char('u') if app.is_in_search_widget() => app.clear_search(),
+                KeyCode::Char('u') if app.is_in_search_widget() => {
+                    app.clear_search()
+                }
                 KeyCode::Char('w') => app.clear_previous_word(),
                 KeyCode::Char('h') => app.on_backspace(),
                 KeyCode::Char('d') => app.scroll_half_page_down(),
@@ -126,10 +145,16 @@ pub fn handle_key_event_or_break(
             }
         } else if let KeyModifiers::SHIFT = event.modifiers {
             match event.code {
-                KeyCode::Left => app.move_widget_selection(&WidgetDirection::Left),
-                KeyCode::Right => app.move_widget_selection(&WidgetDirection::Right),
+                KeyCode::Left => {
+                    app.move_widget_selection(&WidgetDirection::Left)
+                }
+                KeyCode::Right => {
+                    app.move_widget_selection(&WidgetDirection::Right)
+                }
                 KeyCode::Up => app.move_widget_selection(&WidgetDirection::Up),
-                KeyCode::Down => app.move_widget_selection(&WidgetDirection::Down),
+                KeyCode::Down => {
+                    app.move_widget_selection(&WidgetDirection::Down)
+                }
                 KeyCode::Char(caught_char) => app.on_char_key(caught_char),
                 _ => {}
             }

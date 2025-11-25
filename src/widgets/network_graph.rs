@@ -13,7 +13,9 @@ pub struct NetWidgetHeightCache {
 }
 
 impl NetWidgetState {
-    pub fn init(current_display_time: u64, autohide_timer: Option<Instant>) -> Self {
+    pub fn init(
+        current_display_time: u64, autohide_timer: Option<Instant>,
+    ) -> Self {
         NetWidgetState {
             current_display_time,
             autohide_timer,

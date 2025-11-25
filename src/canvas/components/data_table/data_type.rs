@@ -11,7 +11,9 @@ where
 {
     /// Given data, a column, and its corresponding width, return the string in
     /// the cell that will be displayed in the [`super::DataTable`].
-    fn to_cell_text(&self, column: &H, calculated_width: NonZeroU16) -> Option<Cow<'static, str>>;
+    fn to_cell_text(
+        &self, column: &H, calculated_width: NonZeroU16,
+    ) -> Option<Cow<'static, str>>;
 
     /// Given a column, how to style a cell if one needs to override the default styling.
     ///
@@ -20,7 +22,9 @@ where
         unused_variables,
         reason = "The default implementation just returns `None`."
     )]
-    fn style_cell(&self, column: &H, painter: &Painter) -> Option<tui::style::Style> {
+    fn style_cell(
+        &self, column: &H, painter: &Painter,
+    ) -> Option<tui::style::Style> {
         None
     }
 
@@ -37,7 +41,9 @@ where
     }
 
     /// Returns the desired column widths in light of having seen data.
-    fn column_widths<C: DataTableColumn<H>>(data: &[Self], columns: &[C]) -> Vec<u16>
+    fn column_widths<C: DataTableColumn<H>>(
+        data: &[Self], columns: &[C],
+    ) -> Vec<u16>
     where
         Self: Sized;
 }

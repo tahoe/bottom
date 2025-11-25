@@ -21,7 +21,9 @@ use crate::collection::processes::{Pid, linux::is_str_numeric};
 static PAGESIZE: OnceLock<u64> = OnceLock::new();
 
 #[inline]
-fn next_part<'a>(iter: &mut impl Iterator<Item = &'a str>) -> Result<&'a str, io::Error> {
+fn next_part<'a>(
+    iter: &mut impl Iterator<Item = &'a str>,
+) -> Result<&'a str, io::Error> {
     iter.next()
         .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidData))
 }
@@ -80,7 +82,8 @@ impl Stat {
             let start_paren = line
                 .find('(')
                 .ok_or_else(|| anyhow!("start paren missing"))?;
-            let end_paren = line.find(')').ok_or_else(|| anyhow!("end paren missing"))?;
+            let end_paren =
+                line.find(')').ok_or_else(|| anyhow!("end paren missing"))?;
 
             (
                 line[start_paren + 1..end_paren].to_string(),
@@ -260,9 +263,13 @@ impl Process {
             .next_back()
             .and_then(|s| s.to_string_lossy().parse::<Pid>().ok())
             .or_else(|| {
-                rustix::fs::readlinkat(rustix::fs::CWD, pid_path.as_path(), vec![])
-                    .ok()
-                    .and_then(|s| s.to_string_lossy().parse::<Pid>().ok())
+                rustix::fs::readlinkat(
+                    rustix::fs::CWD,
+                    pid_path.as_path(),
+                    vec![],
+                )
+                .ok()
+                .and_then(|s| s.to_string_lossy().parse::<Pid>().ok())
             })
             .ok_or_else(|| anyhow!("PID for {pid_path:?} was not found"))?;
 
@@ -280,8 +287,8 @@ impl Process {
         // buffer!
 
         // Stat is pretty long, do this first to pre-allocate up-front.
-        let stat =
-            open_at(&mut root, "stat", &pid_dir).and_then(|file| Stat::from_file(file, buffer))?;
+        let stat = open_at(&mut root, "stat", &pid_dir)
+            .and_then(|file| Stat::from_file(file, buffer))?;
         reset(&mut root, buffer);
 
         let cmdline = if cmdline(&mut root, &pid_dir, buffer).is_ok() {
@@ -314,8 +321,11 @@ impl Process {
 }
 
 #[inline]
-fn cmdline(root: &mut PathBuf, fd: &OwnedFd, buffer: &mut String) -> anyhow::Result<()> {
-    let _ = open_at(root, "cmdline", fd).map(|mut file| file.read_to_string(buffer))?;
+fn cmdline(
+    root: &mut PathBuf, fd: &OwnedFd, buffer: &mut String,
+) -> anyhow::Result<()> {
+    let _ = open_at(root, "cmdline", fd)
+        .map(|mut file| file.read_to_string(buffer))?;
 
     Ok(())
 }
@@ -324,9 +334,16 @@ fn cmdline(root: &mut PathBuf, fd: &OwnedFd, buffer: &mut String) -> anyhow::Res
 /// mutate it to avoid allocations. You probably will want to pop the most
 /// recent child after if you need to use the buffer again.
 #[inline]
-fn open_at(root: &mut PathBuf, child: &str, fd: &OwnedFd) -> anyhow::Result<File> {
+fn open_at(
+    root: &mut PathBuf, child: &str, fd: &OwnedFd,
+) -> anyhow::Result<File> {
     root.push(child);
-    let new_fd = rustix::fs::openat(fd, &*root, OFlags::RDONLY | OFlags::CLOEXEC, Mode::empty())?;
+    let new_fd = rustix::fs::openat(
+        fd,
+        &*root,
+        OFlags::RDONLY | OFlags::CLOEXEC,
+        Mode::empty(),
+    )?;
 
     Ok(File::from(new_fd))
 }

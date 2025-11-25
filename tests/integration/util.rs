@@ -2,7 +2,9 @@ use std::{env, ffi::OsString, path::Path, process::Command};
 
 use hashbrown::HashMap;
 #[cfg(all(target_arch = "x86_64", target_os = "linux"))]
-use portable_pty::{Child, CommandBuilder, MasterPty, PtySize, native_pty_system};
+use portable_pty::{
+    Child, CommandBuilder, MasterPty, PtySize, native_pty_system,
+};
 
 pub fn abs_path(path: &str) -> OsString {
     let path = Path::new(path);
@@ -42,7 +44,10 @@ fn cross_runner() -> Option<String> {
         .filter_map(|(k, v)| {
             let (k, v) = (k.to_string_lossy(), v.to_string_lossy());
 
-            if k.starts_with("CARGO_TARGET_") && k.ends_with("_RUNNER") && !v.is_empty() {
+            if k.starts_with("CARGO_TARGET_")
+                && k.ends_with("_RUNNER")
+                && !v.is_empty()
+            {
                 Some((TARGET_RUNNER.to_string(), v.to_string()))
             } else if k == CROSS_RUNNER && !v.is_empty() {
                 Some((k.to_string(), v.to_string()))
@@ -57,7 +62,9 @@ fn cross_runner() -> Option<String> {
             env_mapping.get(TARGET_RUNNER).map(|target_runner| {
                 format!(
                     "qemu-{}",
-                    get_qemu_target(target_runner.split_ascii_whitespace().last().unwrap())
+                    get_qemu_target(
+                        target_runner.split_ascii_whitespace().last().unwrap()
+                    )
                 )
             })
         } else {
@@ -70,7 +77,8 @@ fn cross_runner() -> Option<String> {
 
 const BTM_EXE_PATH: &str = env!("CARGO_BIN_EXE_btm");
 const RUNNER_ENV_VARS: [(&str, &str); 1] = [("NO_COLOR", "1")];
-const DEFAULT_CFG: [&str; 2] = ["-C", "./tests/valid_configs/empty_config.toml"];
+const DEFAULT_CFG: [&str; 2] =
+    ["-C", "./tests/valid_configs/empty_config.toml"];
 
 /// Returns the [`Command`] of a binary invocation of bottom, alongside
 /// any required env variables.

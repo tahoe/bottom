@@ -45,7 +45,8 @@ fn get_amd_devs() -> Option<Vec<PathBuf>> {
     let mut devices = Vec::new();
 
     // read all PCI devices controlled by the AMDGPU module
-    let Ok(paths) = fs::read_dir("/sys/module/amdgpu/drivers/pci:amdgpu") else {
+    let Ok(paths) = fs::read_dir("/sys/module/amdgpu/drivers/pci:amdgpu")
+    else {
         return None;
     };
 
@@ -308,8 +309,12 @@ fn get_amd_fdinfo(device_path: &Path) -> Option<HashMap<u32, AmdGpuProc>> {
                     "drm-engine-enc_1" => usage.uvd_usage += fdinfo_value_num,
                     "drm-engine-jpeg" => usage.vcn_usage += fdinfo_value_num,
                     "drm-engine-vpe" => usage.vpe_usage += fdinfo_value_num,
-                    "drm-engine-compute" => usage.compute_usage += fdinfo_value_num,
-                    "drm-memory-vram" => usage.vram_usage += fdinfo_value_num << 10, // KiB -> B
+                    "drm-engine-compute" => {
+                        usage.compute_usage += fdinfo_value_num
+                    }
+                    "drm-memory-vram" => {
+                        usage.vram_usage += fdinfo_value_num << 10
+                    } // KiB -> B
                     _ => {}
                 };
             }
@@ -323,7 +328,9 @@ fn get_amd_fdinfo(device_path: &Path) -> Option<HashMap<u32, AmdGpuProc>> {
     Some(fdinfo)
 }
 
-pub fn get_amd_vecs(widgets_to_harvest: &UsedWidgets, prev_time: Instant) -> Option<AmdGpuData> {
+pub fn get_amd_vecs(
+    widgets_to_harvest: &UsedWidgets, prev_time: Instant,
+) -> Option<AmdGpuData> {
     let device_path_list = get_amd_devs()?;
     let interval = Instant::now().duration_since(prev_time);
     let num_gpu = device_path_list.len();
@@ -354,27 +361,49 @@ pub fn get_amd_vecs(widgets_to_harvest: &UsedWidgets, prev_time: Instant) -> Opt
         if widgets_to_harvest.use_proc {
             if let Some(procs) = get_amd_fdinfo(&device_path) {
                 let mut proc_info = PROC_DATA.lock().unwrap();
-                let _ = proc_info.try_insert(device_path.clone(), HashMap::new());
+                let _ =
+                    proc_info.try_insert(device_path.clone(), HashMap::new());
                 let prev_fdinfo = proc_info.get_mut(&device_path).unwrap();
 
                 let mut procs_map = HashMap::new();
                 for (proc_pid, proc_usage) in procs {
                     if let Some(prev_usage) = prev_fdinfo.get_mut(&proc_pid) {
                         // calculate deltas
-                        let gfx_usage =
-                            diff_usage(prev_usage.gfx_usage, proc_usage.gfx_usage, &interval);
-                        let dma_usage =
-                            diff_usage(prev_usage.dma_usage, proc_usage.dma_usage, &interval);
-                        let enc_usage =
-                            diff_usage(prev_usage.enc_usage, proc_usage.enc_usage, &interval);
-                        let dec_usage =
-                            diff_usage(prev_usage.dec_usage, proc_usage.dec_usage, &interval);
-                        let uvd_usage =
-                            diff_usage(prev_usage.uvd_usage, proc_usage.uvd_usage, &interval);
-                        let vcn_usage =
-                            diff_usage(prev_usage.vcn_usage, proc_usage.vcn_usage, &interval);
-                        let vpe_usage =
-                            diff_usage(prev_usage.vpe_usage, proc_usage.vpe_usage, &interval);
+                        let gfx_usage = diff_usage(
+                            prev_usage.gfx_usage,
+                            proc_usage.gfx_usage,
+                            &interval,
+                        );
+                        let dma_usage = diff_usage(
+                            prev_usage.dma_usage,
+                            proc_usage.dma_usage,
+                            &interval,
+                        );
+                        let enc_usage = diff_usage(
+                            prev_usage.enc_usage,
+                            proc_usage.enc_usage,
+                            &interval,
+                        );
+                        let dec_usage = diff_usage(
+                            prev_usage.dec_usage,
+                            proc_usage.dec_usage,
+                            &interval,
+                        );
+                        let uvd_usage = diff_usage(
+                            prev_usage.uvd_usage,
+                            proc_usage.uvd_usage,
+                            &interval,
+                        );
+                        let vcn_usage = diff_usage(
+                            prev_usage.vcn_usage,
+                            proc_usage.vcn_usage,
+                            &interval,
+                        );
+                        let vpe_usage = diff_usage(
+                            prev_usage.vpe_usage,
+                            proc_usage.vpe_usage,
+                            &interval,
+                        );
 
                         // combined usage
                         let gpu_util_wide = gfx_usage
@@ -385,10 +414,14 @@ pub fn get_amd_vecs(widgets_to_harvest: &UsedWidgets, prev_time: Instant) -> Opt
                             + vcn_usage
                             + vpe_usage;
 
-                        let gpu_util: u32 = gpu_util_wide.try_into().unwrap_or(0);
+                        let gpu_util: u32 =
+                            gpu_util_wide.try_into().unwrap_or(0);
 
                         if gpu_util > 0 || proc_usage.vram_usage > 0 {
-                            procs_map.insert(proc_pid, (proc_usage.vram_usage, gpu_util));
+                            procs_map.insert(
+                                proc_pid,
+                                (proc_usage.vram_usage, gpu_util),
+                            );
                         }
 
                         *prev_usage = proc_usage;

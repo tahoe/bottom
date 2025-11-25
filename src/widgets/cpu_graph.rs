@@ -8,8 +8,8 @@ use crate::{
     canvas::{
         Painter,
         components::data_table::{
-            Column, ColumnHeader, DataTable, DataTableColumn, DataTableProps, DataTableStyling,
-            DataToCell,
+            Column, ColumnHeader, DataTable, DataTableColumn, DataTableProps,
+            DataTableStyling, DataToCell,
         },
     },
     collection::cpu::{CpuData, CpuDataType},
@@ -76,7 +76,9 @@ impl DataToCell<CpuWidgetColumn> for CpuWidgetTableData {
                             CpuDataType::Avg => Some("AVG".into()),
                             CpuDataType::Cpu(index) => {
                                 let index_str = index.to_string();
-                                let text = if calculated_width < CPU_TRUNCATE_BREAKPOINT {
+                                let text = if calculated_width
+                                    < CPU_TRUNCATE_BREAKPOINT
+                                {
                                     index_str.into()
                                 } else {
                                     concat_string!("CPU", index_str).into()
@@ -85,7 +87,9 @@ impl DataToCell<CpuWidgetColumn> for CpuWidgetTableData {
                                 Some(text)
                             }
                         },
-                        CpuWidgetColumn::Use => Some(format!("{:.0}%", last_entry.round()).into()),
+                        CpuWidgetColumn::Use => {
+                            Some(format!("{:.0}%", last_entry.round()).into())
+                        }
                     }
                 }
             }
@@ -102,7 +106,8 @@ impl DataToCell<CpuWidgetColumn> for CpuWidgetTableData {
             } => match data_type {
                 CpuDataType::Avg => painter.styles.avg_cpu_colour,
                 CpuDataType::Cpu(index) => {
-                    painter.styles.cpu_colour_styles[index % painter.styles.cpu_colour_styles.len()]
+                    painter.styles.cpu_colour_styles
+                        [index % painter.styles.cpu_colour_styles.len()]
                 }
             },
         };
@@ -130,8 +135,9 @@ pub struct CpuWidgetState {
 
 impl CpuWidgetState {
     pub(crate) fn new(
-        config: &AppConfigFields, default_selection: CpuDefault, current_display_time: u64,
-        autohide_timer: Option<Instant>, colours: &Styles,
+        config: &AppConfigFields, default_selection: CpuDefault,
+        current_display_time: u64, autohide_timer: Option<Instant>,
+        colours: &Styles,
     ) -> Self {
         const COLUMNS: [Column<CpuWidgetColumn>; 2] = [
             Column::soft(CpuWidgetColumn::Cpu, Some(0.5)),

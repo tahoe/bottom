@@ -19,7 +19,8 @@ use crate::{
 impl Painter {
     /// Inspired by htop.
     pub fn draw_basic_cpu(
-        &self, f: &mut Frame<'_>, app_state: &mut App, mut draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, mut draw_loc: Rect,
+        widget_id: u64,
     ) {
         let cpu_data = &app_state.data_store.get_data().cpu_harvest;
 
@@ -47,13 +48,17 @@ impl Painter {
         if app_state.app_config_fields.dedicated_average_row
             && app_state.app_config_fields.show_average_cpu
         {
-            if let Some((index, avg)) = cpu_data
-                .iter()
-                .find_position(|&datum| matches!(datum.data_type, CpuDataType::Avg))
+            if let Some((index, avg)) =
+                cpu_data.iter().find_position(|&datum| {
+                    matches!(datum.data_type, CpuDataType::Avg)
+                })
             {
                 let (outer, inner, ratio, style) = self.cpu_info(avg);
-                let [cores_loc, mut avg_loc] =
-                    Layout::vertical([Constraint::Min(0), Constraint::Length(1)]).areas(draw_loc);
+                let [cores_loc, mut avg_loc] = Layout::vertical([
+                    Constraint::Min(0),
+                    Constraint::Length(1),
+                ])
+                .areas(draw_loc);
 
                 // The cores section all have horizontal margin, so to line up with the cores we
                 // need to add some margin ourselves.
@@ -80,19 +85,23 @@ impl Painter {
             const REQUIRED_COLUMNS: usize = 4;
 
             let col_constraints =
-                vec![Constraint::Percentage((100 / REQUIRED_COLUMNS) as u16); REQUIRED_COLUMNS];
+                vec![
+                    Constraint::Percentage((100 / REQUIRED_COLUMNS) as u16);
+                    REQUIRED_COLUMNS
+                ];
             let columns = Layout::default()
                 .constraints(col_constraints)
                 .direction(Direction::Horizontal)
                 .split(draw_loc);
 
-            let mut gauge_info = cpu_data.iter().enumerate().filter_map(|(index, cpu)| {
-                if index == avg_index {
-                    None
-                } else {
-                    Some(self.cpu_info(cpu))
-                }
-            });
+            let mut gauge_info =
+                cpu_data.iter().enumerate().filter_map(|(index, cpu)| {
+                    if index == avg_index {
+                        None
+                    } else {
+                        Some(self.cpu_info(cpu))
+                    }
+                });
 
             // Very ugly way to sync the gauge limit across all gauges.
             let hide_parts = columns
@@ -115,18 +124,24 @@ impl Painter {
                     let to_divide = REQUIRED_COLUMNS - itx;
                     let num_taken = min(
                         remaining_height,
-                        (row_counter / to_divide) + usize::from(row_counter % to_divide != 0),
+                        (row_counter / to_divide)
+                            + usize::from(row_counter % to_divide != 0),
                     );
                     row_counter -= num_taken;
                     let chunk = (&mut gauge_info).take(num_taken);
 
                     let rows = Layout::default()
                         .direction(Direction::Vertical)
-                        .constraints(vec![Constraint::Length(1); remaining_height])
+                        .constraints(vec![
+                            Constraint::Length(1);
+                            remaining_height
+                        ])
                         .horizontal_margin(1)
                         .split(*column);
 
-                    for ((start_label, inner_label, ratio, style), row) in chunk.zip(rows.iter()) {
+                    for ((start_label, inner_label, ratio, style), row) in
+                        chunk.zip(rows.iter())
+                    {
                         f.render_widget(
                             PipeGauge::default()
                                 .gauge_style(style)
@@ -146,19 +161,24 @@ impl Painter {
             // Update draw loc in widget map
             if let Some(widget) = app_state.widget_map.get_mut(&widget_id) {
                 widget.top_left_corner = Some((draw_loc.x, draw_loc.y));
-                widget.bottom_right_corner =
-                    Some((draw_loc.x + draw_loc.width, draw_loc.y + draw_loc.height));
+                widget.bottom_right_corner = Some((
+                    draw_loc.x + draw_loc.width,
+                    draw_loc.y + draw_loc.height,
+                ));
             }
         }
     }
 
     #[inline]
-    fn cpu_info(&self, data: &CpuData) -> (String, String, f32, tui::style::Style) {
+    fn cpu_info(
+        &self, data: &CpuData,
+    ) -> (String, String, f32, tui::style::Style) {
         let (outer, style) = match data.data_type {
             CpuDataType::Avg => ("AVG".to_string(), self.styles.avg_cpu_colour),
             CpuDataType::Cpu(index) => (
                 format!("{index:<3}",),
-                self.styles.cpu_colour_styles[index % self.styles.cpu_colour_styles.len()],
+                self.styles.cpu_colour_styles
+                    [index % self.styles.cpu_colour_styles.len()],
             ),
         };
 

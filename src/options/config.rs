@@ -74,8 +74,9 @@ mod test {
                 let config_path_str = path.display().to_string();
                 let config_str = fs::read_to_string(path).unwrap();
 
-                toml_edit::de::from_str::<Config>(&config_str)
-                    .unwrap_or_else(|_| panic!("incorrectly rejected '{config_path_str}'"));
+                toml_edit::de::from_str::<Config>(&config_str).unwrap_or_else(
+                    |_| panic!("incorrectly rejected '{config_path_str}'"),
+                );
             }
         }
     }

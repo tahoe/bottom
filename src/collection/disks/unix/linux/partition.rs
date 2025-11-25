@@ -56,7 +56,8 @@ impl Partition {
                     combined_path.pop(); // Pop the current file...
                     combined_path.push(path);
 
-                    if let Ok(canon_path) = std::fs::canonicalize(combined_path) {
+                    if let Ok(canon_path) = std::fs::canonicalize(combined_path)
+                    {
                         // Resolve the local path into an absolute one...
                         canon_path
                             .into_os_string()
@@ -82,7 +83,8 @@ impl Partition {
             .to_str()
             .ok_or_else(|| io::Error::from(io::ErrorKind::InvalidInput))
             .and_then(|string| {
-                CString::new(string).map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))
+                CString::new(string)
+                    .map_err(|_| io::Error::from(io::ErrorKind::InvalidInput))
             })
             .map_err(|e| anyhow::anyhow!("invalid path: {e:?}"))?;
 

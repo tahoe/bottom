@@ -7,7 +7,9 @@ use tui::{
 
 use crate::{
     app::App,
-    canvas::{Painter, components::pipe_gauge::PipeGauge, drawing_utils::widget_block},
+    canvas::{
+        Painter, components::pipe_gauge::PipeGauge, drawing_utils::widget_block,
+    },
     collection::memory::MemData,
     get_binary_unit_and_denominator,
 };
@@ -42,7 +44,8 @@ fn memory_label(data: &MemData, is_percentage: bool) -> Cow<'static, str> {
 
 impl Painter {
     pub fn draw_basic_memory(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
         let mut draw_widgets: Vec<PipeGauge<'_>> = Vec::new();
 
@@ -56,21 +59,22 @@ impl Painter {
 
         let data = app_state.data_store.get_data();
 
-        let (ram_percentage, ram_label) = if let Some(ram_harvest) = &data.ram_harvest {
-            (
-                ram_harvest.percentage(),
-                memory_label(ram_harvest, app_state.basic_mode_use_percent),
-            )
-        } else {
-            (
-                0.0,
-                if app_state.basic_mode_use_percent {
-                    "0.0B/0.0B".into()
-                } else {
-                    "  0%".into()
-                },
-            )
-        };
+        let (ram_percentage, ram_label) =
+            if let Some(ram_harvest) = &data.ram_harvest {
+                (
+                    ram_harvest.percentage(),
+                    memory_label(ram_harvest, app_state.basic_mode_use_percent),
+                )
+            } else {
+                (
+                    0.0,
+                    if app_state.basic_mode_use_percent {
+                        "0.0B/0.0B".into()
+                    } else {
+                        "  0%".into()
+                    },
+                )
+            };
 
         draw_widgets.push(
             PipeGauge::default()
@@ -83,7 +87,8 @@ impl Painter {
 
         if let Some(swap_harvest) = &data.swap_harvest {
             let swap_percentage = swap_harvest.percentage();
-            let swap_label = memory_label(swap_harvest, app_state.basic_mode_use_percent);
+            let swap_label =
+                memory_label(swap_harvest, app_state.basic_mode_use_percent);
 
             draw_widgets.push(
                 PipeGauge::default()
@@ -99,8 +104,10 @@ impl Painter {
         {
             if let Some(cache_harvest) = &data.cache_harvest {
                 let cache_percentage = cache_harvest.percentage();
-                let cache_fraction_label =
-                    memory_label(cache_harvest, app_state.basic_mode_use_percent);
+                let cache_fraction_label = memory_label(
+                    cache_harvest,
+                    app_state.basic_mode_use_percent,
+                );
 
                 draw_widgets.push(
                     PipeGauge::default()
@@ -138,13 +145,15 @@ impl Painter {
 
             for (_, harvest) in data.gpu_harvest.iter() {
                 let percentage = harvest.percentage();
-                let label = memory_label(harvest, app_state.basic_mode_use_percent);
+                let label =
+                    memory_label(harvest, app_state.basic_mode_use_percent);
 
                 let style = {
                     if gpu_styles.is_empty() {
                         tui::style::Style::default()
                     } else {
-                        let colour = gpu_styles[colour_index % gpu_styles.len()];
+                        let colour =
+                            gpu_styles[colour_index % gpu_styles.len()];
                         colour_index += 1;
 
                         colour
@@ -179,8 +188,10 @@ impl Painter {
         if app_state.should_get_widget_bounds() {
             if let Some(widget) = app_state.widget_map.get_mut(&widget_id) {
                 widget.top_left_corner = Some((draw_loc.x, draw_loc.y));
-                widget.bottom_right_corner =
-                    Some((draw_loc.x + draw_loc.width, draw_loc.y + draw_loc.height));
+                widget.bottom_right_corner = Some((
+                    draw_loc.x + draw_loc.width,
+                    draw_loc.y + draw_loc.height,
+                ));
             }
         }
     }

@@ -46,7 +46,8 @@ impl TimeChart<'_> {
                 .iter_along_base(times)
                 .rev()
                 .map(|(&time, &val)| {
-                    let from_start = -(current_time.duration_since(time).as_millis() as f64);
+                    let from_start =
+                        -(current_time.duration_since(time).as_millis() as f64);
 
                     // XXX: Should this be generic over dataset.graph_type instead? That would allow us to move
                     // transformations behind a type - however, that also means that there's some complexity added.
@@ -64,7 +65,8 @@ impl TimeChart<'_> {
                     break;
                 } else if next.0 < left_edge {
                     // The next point goes past the left edge. Interpolate a point + the line and halt.
-                    let interpolated = interpolate_point(&next, &curr, left_edge);
+                    let interpolated =
+                        interpolate_point(&next, &curr, left_edge);
 
                     ctx.draw(&CanvasLine {
                         x1: curr.0,

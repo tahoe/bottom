@@ -10,7 +10,9 @@ use crate::utils::data_units::*;
 /// denominator in order to be able to use it with the returned binary unit
 /// (e.g. divide 3000 bytes by 1024 to have a value in KiB).
 #[inline]
-pub(crate) fn get_binary_unit_and_denominator(bytes: u64) -> (&'static str, f64) {
+pub(crate) fn get_binary_unit_and_denominator(
+    bytes: u64,
+) -> (&'static str, f64) {
     match bytes {
         b if b < KIBI_LIMIT => ("B", 1.0),
         b if b < MEBI_LIMIT => ("KiB", KIBI_LIMIT_F64),
@@ -43,13 +45,22 @@ mod test {
         assert_eq!(dec_bytes_per_second_string(1), "1B/s".to_string());
         assert_eq!(dec_bytes_per_second_string(900), "900B/s".to_string());
         assert_eq!(dec_bytes_per_second_string(999), "999B/s".to_string());
-        assert_eq!(dec_bytes_per_second_string(KILO_LIMIT), "1KB/s".to_string());
+        assert_eq!(
+            dec_bytes_per_second_string(KILO_LIMIT),
+            "1KB/s".to_string()
+        );
         assert_eq!(
             dec_bytes_per_second_string(KILO_LIMIT + 1),
             "1KB/s".to_string()
         );
-        assert_eq!(dec_bytes_per_second_string(KIBI_LIMIT), "1KB/s".to_string());
-        assert_eq!(dec_bytes_per_second_string(MEGA_LIMIT), "1MB/s".to_string());
+        assert_eq!(
+            dec_bytes_per_second_string(KIBI_LIMIT),
+            "1KB/s".to_string()
+        );
+        assert_eq!(
+            dec_bytes_per_second_string(MEGA_LIMIT),
+            "1MB/s".to_string()
+        );
         assert_eq!(
             dec_bytes_per_second_string(GIGA_LIMIT),
             "1.0GB/s".to_string()

@@ -51,10 +51,17 @@ pub(crate) type OptionResult<T> = Result<T, OptionError>;
 impl std::fmt::Display for OptionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            OptionError::Config(reason) => write!(f, "Configuration file error: {reason}"),
-            OptionError::Argument(reason) => write!(f, "Argument error: {reason}"),
+            OptionError::Config(reason) => {
+                write!(f, "Configuration file error: {reason}")
+            }
+            OptionError::Argument(reason) => {
+                write!(f, "Argument error: {reason}")
+            }
             OptionError::Other(reason) => {
-                write!(f, "Error with the config file or the arguments: {reason}")
+                write!(
+                    f,
+                    "Error with the config file or the arguments: {reason}"
+                )
             }
         }
     }

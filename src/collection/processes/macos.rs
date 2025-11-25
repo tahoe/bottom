@@ -24,8 +24,11 @@ impl UnixProcessExt for MacOSProcessExt {
             .arg(
                 // Has to look like this since otherwise, it you hit a `unstable_name_collisions`
                 // warning.
-                Itertools::intersperse(pids.iter().map(i32::to_string), ",".to_string())
-                    .collect::<String>(),
+                Itertools::intersperse(
+                    pids.iter().map(i32::to_string),
+                    ",".to_string(),
+                )
+                .collect::<String>(),
             )
             .output()?;
         let mut result = HashMap::new();

@@ -1,4 +1,7 @@
-#[cfg(all(feature = "zfs", any(target_os = "linux", target_os = "freebsd")))]
+#[cfg(all(
+    feature = "zfs",
+    any(target_os = "linux", target_os = "freebsd")
+))]
 use super::MemData;
 #[cfg(all(feature = "zfs", any(target_os = "linux", target_os = "freebsd")))]
 /// Return ARC usage.

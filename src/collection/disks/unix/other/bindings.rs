@@ -7,16 +7,19 @@ const MNT_NOWAIT: libc::c_int = 2;
 
 // SAFETY: Bindings like this are inherently unsafe.
 unsafe extern "C" {
-    fn getfsstat64(buf: *mut libc::statfs, bufsize: libc::c_int, flags: libc::c_int)
-    -> libc::c_int;
+    fn getfsstat64(
+        buf: *mut libc::statfs, bufsize: libc::c_int, flags: libc::c_int,
+    ) -> libc::c_int;
 }
 
 /// Returns all the mounts on the system at the moment.
 pub(crate) fn mounts() -> anyhow::Result<Vec<libc::statfs>> {
     // SAFETY: System API FFI call, arguments should be correct.
-    let expected_len = unsafe { getfsstat64(std::ptr::null_mut(), 0, MNT_NOWAIT) };
+    let expected_len =
+        unsafe { getfsstat64(std::ptr::null_mut(), 0, MNT_NOWAIT) };
 
-    let mut mounts: Vec<libc::statfs> = Vec::with_capacity(expected_len as usize);
+    let mut mounts: Vec<libc::statfs> =
+        Vec::with_capacity(expected_len as usize);
 
     // SAFETY: System API FFI call, arguments should be correct.
     let result = unsafe {

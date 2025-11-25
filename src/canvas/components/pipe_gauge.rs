@@ -122,7 +122,8 @@ impl Widget for PipeGauge<'_> {
 
             match self.hide_parts {
                 LabelLimit::StartLabel => {
-                    let inner_label = self.inner_label.unwrap_or_else(|| Line::from(""));
+                    let inner_label =
+                        self.inner_label.unwrap_or_else(|| Line::from(""));
                     let _ = buf.set_line(
                         gauge_area.left(),
                         gauge_area.top(),
@@ -134,9 +135,12 @@ impl Widget for PipeGauge<'_> {
                     return;
                 }
                 LabelLimit::Auto(_)
-                    if gauge_area.width < (inner_label_width + start_label_width + 1) as u16 =>
+                    if gauge_area.width
+                        < (inner_label_width + start_label_width + 1)
+                            as u16 =>
                 {
-                    let inner_label = self.inner_label.unwrap_or_else(|| Line::from(""));
+                    let inner_label =
+                        self.inner_label.unwrap_or_else(|| Line::from(""));
                     let _ = buf.set_line(
                         gauge_area.left(),
                         gauge_area.top(),
@@ -148,7 +152,8 @@ impl Widget for PipeGauge<'_> {
                     return;
                 }
                 _ => {
-                    let start_label = self.start_label.unwrap_or_else(|| Line::from(""));
+                    let start_label =
+                        self.start_label.unwrap_or_else(|| Line::from(""));
                     buf.set_line(
                         gauge_area.left(),
                         gauge_area.top(),
@@ -184,7 +189,8 @@ impl Widget for PipeGauge<'_> {
                 );
             }
             LabelLimit::Auto(_) | LabelLimit::None => {
-                let (start, _) = buf.set_line(col, row, &Line::from("["), gauge_area.width);
+                let (start, _) =
+                    buf.set_line(col, row, &Line::from("["), gauge_area.width);
                 if start >= gauge_area.right() {
                     return;
                 }
@@ -196,8 +202,9 @@ impl Widget for PipeGauge<'_> {
                     gauge_area.width,
                 );
 
-                let pipe_end =
-                    start + (f64::from(end.saturating_sub(start)) * self.ratio).floor() as u16;
+                let pipe_end = start
+                    + (f64::from(end.saturating_sub(start)) * self.ratio)
+                        .floor() as u16;
                 for col in start..pipe_end {
                     if let Some(cell) = buf.cell_mut((col, row)) {
                         cell.set_symbol("|").set_style(Style {
@@ -214,7 +221,12 @@ impl Widget for PipeGauge<'_> {
                     let gauge_end = gauge_area
                         .right()
                         .saturating_sub(end_label.width() as u16 + 1);
-                    buf.set_line(gauge_end, row, &end_label, end_label.width() as u16);
+                    buf.set_line(
+                        gauge_end,
+                        row,
+                        &end_label,
+                        end_label.width() as u16,
+                    );
                 }
             }
             LabelLimit::StartLabel => unreachable!(),

@@ -6,7 +6,9 @@ use hashbrown::HashMap;
 use serde::Deserialize;
 
 use super::{DiskHarvest, IoHarvest, keep_disk_entry};
-use crate::collection::{DataCollector, deserialize_xo, disks::IoData, error::CollectionResult};
+use crate::collection::{
+    DataCollector, deserialize_xo, disks::IoData, error::CollectionResult,
+};
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -56,28 +58,36 @@ pub fn get_io_usage() -> CollectionResult<IoHarvest> {
     Ok(io_harvest)
 }
 
-pub fn get_disk_usage(collector: &DataCollector) -> CollectionResult<Vec<DiskHarvest>> {
+pub fn get_disk_usage(
+    collector: &DataCollector,
+) -> CollectionResult<Vec<DiskHarvest>> {
     let disk_filter = &collector.filters.disk_filter;
     let mount_filter = &collector.filters.mount_filter;
-    let vec_disks: Vec<DiskHarvest> = get_disk_info().map(|storage_system_information| {
-        storage_system_information
-            .filesystem
-            .into_iter()
-            .filter_map(|disk| {
-                if keep_disk_entry(&disk.name, &disk.mounted_on, disk_filter, mount_filter) {
-                    Some(DiskHarvest {
-                        free_space: Some(disk.available_blocks * 1024),
-                        used_space: Some(disk.used_blocks * 1024),
-                        total_space: Some(disk.total_blocks * 1024),
-                        mount_point: disk.mounted_on,
-                        name: disk.name,
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect()
-    })?;
+    let vec_disks: Vec<DiskHarvest> =
+        get_disk_info().map(|storage_system_information| {
+            storage_system_information
+                .filesystem
+                .into_iter()
+                .filter_map(|disk| {
+                    if keep_disk_entry(
+                        &disk.name,
+                        &disk.mounted_on,
+                        disk_filter,
+                        mount_filter,
+                    ) {
+                        Some(DiskHarvest {
+                            free_space: Some(disk.available_blocks * 1024),
+                            used_space: Some(disk.used_blocks * 1024),
+                            total_space: Some(disk.total_blocks * 1024),
+                            mount_point: disk.mounted_on,
+                            name: disk.name,
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        })?;
 
     Ok(vec_disks)
 }

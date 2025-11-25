@@ -127,9 +127,9 @@ impl StoredData {
                     .into_iter()
                     .map(|temp| TempWidgetData {
                         sensor: temp.name,
-                        temperature: temp
-                            .temperature
-                            .map(|c| settings.temperature_type.convert_temp_unit(c)),
+                        temperature: temp.temperature.map(|c| {
+                            settings.temperature_type.convert_temp_unit(c)
+                        }),
                     })
                     .collect()
             })
@@ -157,7 +157,8 @@ impl StoredData {
     }
 
     fn eat_disks(
-        &mut self, disks: Vec<disks::DiskHarvest>, io: disks::IoHarvest, harvested_time: Instant,
+        &mut self, disks: Vec<disks::DiskHarvest>, io: disks::IoHarvest,
+        harvested_time: Instant,
     ) {
         let time_since_last_harvest = harvested_time
             .duration_since(self.last_update_time)
@@ -227,17 +228,20 @@ impl StoredData {
                 }
             };
 
-            let (mut io_read_rate_bytes, mut io_write_rate_bytes) = (None, None);
+            let (mut io_read_rate_bytes, mut io_write_rate_bytes) =
+                (None, None);
             if let Some(Some(io_device)) = io_device {
                 if let Some(prev_io) = self.prev_io.get_mut(itx) {
                     io_read_rate_bytes = Some(
-                        ((io_device.read_bytes.saturating_sub(prev_io.0)) as f64
+                        ((io_device.read_bytes.saturating_sub(prev_io.0))
+                            as f64
                             / time_since_last_harvest)
                             .round() as u64,
                     );
 
                     io_write_rate_bytes = Some(
-                        ((io_device.write_bytes.saturating_sub(prev_io.1)) as f64
+                        ((io_device.write_bytes.saturating_sub(prev_io.1))
+                            as f64
                             / time_since_last_harvest)
                             .round() as u64,
                     );
@@ -246,10 +250,11 @@ impl StoredData {
                 }
             }
 
-            let summed_total_bytes = match (device.used_space, device.free_space) {
-                (Some(used), Some(free)) => Some(used + free),
-                _ => None,
-            };
+            let summed_total_bytes =
+                match (device.used_space, device.free_space) {
+                    (Some(used), Some(free)) => Some(used + free),
+                    _ => None,
+                };
 
             self.disk_harvest.push(DiskWidgetData {
                 name: device.name,
@@ -286,9 +291,12 @@ impl DataStore {
     pub fn toggle_frozen(&mut self) {
         match &self.frozen_state {
             FrozenState::NotFrozen => {
-                self.frozen_state = FrozenState::Frozen(Box::new(self.main.clone()));
+                self.frozen_state =
+                    FrozenState::Frozen(Box::new(self.main.clone()));
             }
-            FrozenState::Frozen(_) => self.frozen_state = FrozenState::NotFrozen,
+            FrozenState::Frozen(_) => {
+                self.frozen_state = FrozenState::NotFrozen
+            }
         }
     }
 

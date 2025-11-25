@@ -146,7 +146,9 @@ pub trait CalculateColumnWidths<H> {
     ///   try and work with.
     /// * `left_to_right` is whether to size from left-to-right (`true`) or
     ///   right-to-left (`false`).
-    fn calculate_column_widths(&self, total_width: u16, left_to_right: bool) -> Vec<NonZeroU16>;
+    fn calculate_column_widths(
+        &self, total_width: u16, left_to_right: bool,
+    ) -> Vec<NonZeroU16>;
 }
 
 impl<H, C> CalculateColumnWidths<H> for [C]
@@ -154,7 +156,9 @@ where
     H: ColumnHeader,
     C: DataTableColumn<H>,
 {
-    fn calculate_column_widths(&self, total_width: u16, left_to_right: bool) -> Vec<NonZeroU16> {
+    fn calculate_column_widths(
+        &self, total_width: u16, left_to_right: bool,
+    ) -> Vec<NonZeroU16> {
         use itertools::Either;
 
         const COLUMN_SPACING: u16 = 1;
@@ -189,24 +193,27 @@ where
 
                     let soft_limit = max(
                         if let Some(max_percentage) = max_percentage {
-                            ((*max_percentage * f32::from(total_width)).ceil()) as u16
+                            ((*max_percentage * f32::from(total_width)).ceil())
+                                as u16
                         } else {
                             *desired
                         },
                         min_width,
                     );
-                    let space_taken = min(min(soft_limit, *desired), total_width_left);
+                    let space_taken =
+                        min(min(soft_limit, *desired), total_width_left);
 
                     if stop_allocating_space(space_taken, total_width_left) {
                         break;
                     } else {
-                        total_width_left =
-                            total_width_left.saturating_sub(space_taken + COLUMN_SPACING);
+                        total_width_left = total_width_left
+                            .saturating_sub(space_taken + COLUMN_SPACING);
 
                         // SAFETY: This is safe as we call `stop_allocating_space` which checks that
                         // the value pushed is greater than zero.
                         unsafe {
-                            calculated_widths.push(NonZeroU16::new_unchecked(space_taken));
+                            calculated_widths
+                                .push(NonZeroU16::new_unchecked(space_taken));
                         }
                     }
                 }
@@ -215,13 +222,14 @@ where
                     if stop_allocating_space(min_width, total_width_left) {
                         break;
                     } else {
-                        total_width_left =
-                            total_width_left.saturating_sub(min_width + COLUMN_SPACING);
+                        total_width_left = total_width_left
+                            .saturating_sub(min_width + COLUMN_SPACING);
 
                         // SAFETY: This is safe as we call `stop_allocating_space` which checks that
                         // the value pushed is greater than zero.
                         unsafe {
-                            calculated_widths.push(NonZeroU16::new_unchecked(min_width));
+                            calculated_widths
+                                .push(NonZeroU16::new_unchecked(min_width));
                         }
                     }
                 }
@@ -230,13 +238,14 @@ where
                     if stop_allocating_space(min_width, total_width_left) {
                         break;
                     } else {
-                        total_width_left =
-                            total_width_left.saturating_sub(min_width + COLUMN_SPACING);
+                        total_width_left = total_width_left
+                            .saturating_sub(min_width + COLUMN_SPACING);
 
                         // SAFETY: This is safe as we call `stop_allocating_space` which checks that
                         // the value pushed is greater than zero.
                         unsafe {
-                            calculated_widths.push(NonZeroU16::new_unchecked(min_width));
+                            calculated_widths
+                                .push(NonZeroU16::new_unchecked(min_width));
                         }
                     }
                 }

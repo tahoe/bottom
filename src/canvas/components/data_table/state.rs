@@ -48,7 +48,9 @@ impl Default for DataTableState {
 
 impl DataTableState {
     /// Gets the starting position of a table.
-    pub fn get_start_position(&mut self, num_rows: usize, is_force_redraw: bool) {
+    pub fn get_start_position(
+        &mut self, num_rows: usize, is_force_redraw: bool,
+    ) {
         let start_index = if is_force_redraw {
             0
         } else {

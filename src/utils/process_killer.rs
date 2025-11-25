@@ -6,7 +6,8 @@ use anyhow::bail;
 use windows::Win32::{
     Foundation::{CloseHandle, HANDLE},
     System::Threading::{
-        OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_TERMINATE, TerminateProcess,
+        OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_TERMINATE,
+        TerminateProcess,
     },
 };
 
@@ -20,7 +21,13 @@ struct Process(HANDLE);
 impl Process {
     fn open(pid: u32) -> anyhow::Result<Process> {
         // SAFETY: Windows API call, tread carefully with the args.
-        match unsafe { OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE, false, pid) } {
+        match unsafe {
+            OpenProcess(
+                PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE,
+                false,
+                pid,
+            )
+        } {
             Ok(process) => Ok(Process(process)),
             Err(_) => bail!("process may have already been terminated."),
         }

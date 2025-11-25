@@ -40,13 +40,19 @@ use app::{App, AppConfigFields, DataFilters, layout_manager::UsedWidgets};
 use crossterm::{
     cursor::{Hide, Show},
     event::{
-        DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
-        Event, KeyEventKind, MouseEventKind, poll, read,
+        DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
+        EnableMouseCapture, Event, KeyEventKind, MouseEventKind, poll, read,
     },
     execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{
+        EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode,
+        enable_raw_mode,
+    },
 };
-use event::{BottomEvent, CollectionThreadEvent, handle_key_event_or_break, handle_mouse_event};
+use event::{
+    BottomEvent, CollectionThreadEvent, handle_key_event_or_break,
+    handle_mouse_event,
+};
 use options::{args, get_or_create_config, init_app};
 use tui::{Terminal, backend::CrosstermBackend};
 #[allow(unused_imports, reason = "this is needed if logging is enabled")]
@@ -98,7 +104,9 @@ fn check_if_terminal() {
         eprintln!(
             "Warning: bottom is not being output to a terminal. Things might not work properly."
         );
-        eprintln!("If you're stuck, press 'q' or 'Ctrl-c' to quit the program.");
+        eprintln!(
+            "If you're stuck, press 'q' or 'Ctrl-c' to quit the program."
+        );
         stderr().flush().unwrap();
         thread::sleep(Duration::from_secs(1));
     }
@@ -134,7 +142,9 @@ fn panic_hook(panic_info: &PanicHookInfo<'_>) {
 
     // Print stack trace. Must be done after!
     if let Some(panic_info) = panic_info.location() {
-        println!("thread '<unnamed>' panicked at '{msg}', {panic_info}\n\r{backtrace}")
+        println!(
+            "thread '<unnamed>' panicked at '{msg}', {panic_info}\n\r{backtrace}"
+        )
     }
 
     // TODO: Might be cleaner in the future to use a cancellation token, but that causes some fun issues with
@@ -176,32 +186,52 @@ fn create_input_thread(
                                 }
                             }
                             Event::Paste(paste) => {
-                                if sender.send(BottomEvent::PasteEvent(paste)).is_err() {
+                                if sender
+                                    .send(BottomEvent::PasteEvent(paste))
+                                    .is_err()
+                                {
                                     break;
                                 }
                             }
                             Event::Key(key)
-                                if !keys_disabled && key.kind == KeyEventKind::Press =>
+                                if !keys_disabled
+                                    && key.kind == KeyEventKind::Press =>
                             {
                                 // For now, we only care about key down events. This may change in
                                 // the future.
-                                if sender.send(BottomEvent::KeyInput(key)).is_err() {
+                                if sender
+                                    .send(BottomEvent::KeyInput(key))
+                                    .is_err()
+                                {
                                     break;
                                 }
                             }
                             Event::Mouse(mouse) => match mouse.kind {
-                                MouseEventKind::Moved | MouseEventKind::Drag(..) => {}
-                                MouseEventKind::ScrollDown | MouseEventKind::ScrollUp => {
-                                    if Instant::now().duration_since(mouse_timer).as_millis() >= 20
+                                MouseEventKind::Moved
+                                | MouseEventKind::Drag(..) => {}
+                                MouseEventKind::ScrollDown
+                                | MouseEventKind::ScrollUp => {
+                                    if Instant::now()
+                                        .duration_since(mouse_timer)
+                                        .as_millis()
+                                        >= 20
                                     {
-                                        if sender.send(BottomEvent::MouseInput(mouse)).is_err() {
+                                        if sender
+                                            .send(BottomEvent::MouseInput(
+                                                mouse,
+                                            ))
+                                            .is_err()
+                                        {
                                             break;
                                         }
                                         mouse_timer = Instant::now();
                                     }
                                 }
                                 _ => {
-                                    if sender.send(BottomEvent::MouseInput(mouse)).is_err() {
+                                    if sender
+                                        .send(BottomEvent::MouseInput(mouse))
+                                        .is_err()
+                                    {
                                         break;
                                     }
                                 }
@@ -219,9 +249,11 @@ fn create_input_thread(
 
 /// Create a thread to handle data collection.
 fn create_collection_thread(
-    sender: Sender<BottomEvent>, control_receiver: Receiver<CollectionThreadEvent>,
-    cancellation_token: Arc<CancellationToken>, app_config_fields: &AppConfigFields,
-    filters: DataFilters, used_widget_set: UsedWidgets,
+    sender: Sender<BottomEvent>,
+    control_receiver: Receiver<CollectionThreadEvent>,
+    cancellation_token: Arc<CancellationToken>,
+    app_config_fields: &AppConfigFields, filters: DataFilters,
+    used_widget_set: UsedWidgets,
 ) -> JoinHandle<()> {
     let use_current_cpu_total = app_config_fields.use_current_cpu_total;
     let unnormalized_cpu = app_config_fields.unnormalized_cpu;
@@ -282,7 +314,9 @@ fn create_collection_thread(
             }
 
             // Sleep while allowing for interruptions...
-            if cancellation_token.sleep_with_cancellation(Duration::from_millis(update_sleep)) {
+            if cancellation_token
+                .sleep_with_cancellation(Duration::from_millis(update_sleep))
+            {
                 break;
             }
         }
@@ -323,7 +357,8 @@ pub fn start_bottom(enable_error_hook: &mut bool) -> anyhow::Result<()> {
 
     // Set up the event loop thread; we set this up early to speed up
     // first-time-to-data.
-    let (collection_thread_ctrl_sender, collection_thread_ctrl_receiver) = mpsc::channel();
+    let (collection_thread_ctrl_sender, collection_thread_ctrl_receiver) =
+        mpsc::channel();
     let _collection_thread = create_collection_thread(
         sender.clone(),
         collection_thread_ctrl_receiver,
@@ -344,7 +379,8 @@ pub fn start_bottom(enable_error_hook: &mut bool) -> anyhow::Result<()> {
     let _cleaning_thread = {
         let cancellation_token = cancellation_token.clone();
         let cleaning_sender = sender.clone();
-        let offset_wait = Duration::from_millis(app.app_config_fields.retention_ms + 60000);
+        let offset_wait =
+            Duration::from_millis(app.app_config_fields.retention_ms + 60000);
         thread::spawn(move || {
             loop {
                 if cancellation_token.sleep_with_cancellation(offset_wait) {
@@ -410,7 +446,11 @@ pub fn start_bottom(enable_error_hook: &mut bool) -> anyhow::Result<()> {
                     try_drawing(&mut terminal, &mut app, &mut painter)?;
                 }
                 BottomEvent::KeyInput(event) => {
-                    if handle_key_event_or_break(event, &mut app, &collection_thread_ctrl_sender) {
+                    if handle_key_event_or_break(
+                        event,
+                        &mut app,
+                        &collection_thread_ctrl_sender,
+                    ) {
                         break;
                     }
                     app.update_data();
@@ -440,25 +480,33 @@ pub fn start_bottom(enable_error_hook: &mut bool) -> anyhow::Result<()> {
                         // Convert all data into data for the displayed widgets.
 
                         if app.used_widgets.use_disk {
-                            for disk in app.states.disk_state.widget_states.values_mut() {
+                            for disk in
+                                app.states.disk_state.widget_states.values_mut()
+                            {
                                 disk.force_data_update();
                             }
                         }
 
                         if app.used_widgets.use_temp {
-                            for temp in app.states.temp_state.widget_states.values_mut() {
+                            for temp in
+                                app.states.temp_state.widget_states.values_mut()
+                            {
                                 temp.force_data_update();
                             }
                         }
 
                         if app.used_widgets.use_proc {
-                            for proc in app.states.proc_state.widget_states.values_mut() {
+                            for proc in
+                                app.states.proc_state.widget_states.values_mut()
+                            {
                                 proc.force_data_update();
                             }
                         }
 
                         if app.used_widgets.use_cpu {
-                            for cpu in app.states.cpu_state.widget_states.values_mut() {
+                            for cpu in
+                                app.states.cpu_state.widget_states.values_mut()
+                            {
                                 cpu.force_data_update();
                             }
                         }
@@ -468,8 +516,9 @@ pub fn start_bottom(enable_error_hook: &mut bool) -> anyhow::Result<()> {
                     }
                 }
                 BottomEvent::Clean => {
-                    app.data_store
-                        .clean_data(Duration::from_millis(app.app_config_fields.retention_ms));
+                    app.data_store.clean_data(Duration::from_millis(
+                        app.app_config_fields.retention_ms,
+                    ));
                 }
             }
         }

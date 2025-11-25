@@ -17,7 +17,8 @@ impl Styles {
         const HIGHLIGHT_COLOUR: Color = Color::LightBlue;
         const AVG_COLOUR: Color = Color::Red;
         const ALL_COLOUR: Color = Color::Green;
-        const DEFAULT_SELECTED_TEXT_STYLE: Style = color!(Color::Black).bg(HIGHLIGHT_COLOUR);
+        const DEFAULT_SELECTED_TEXT_STYLE: Style =
+            color!(Color::Black).bg(HIGHLIGHT_COLOUR);
         const TEXT_COLOUR: Color = Color::Gray;
 
         Self {
@@ -57,7 +58,8 @@ impl Styles {
             highlighted_border_style: color!(HIGHLIGHT_COLOUR),
             text_style: color!(TEXT_COLOUR),
             selected_text_style: DEFAULT_SELECTED_TEXT_STYLE,
-            table_header_style: color!(HIGHLIGHT_COLOUR).add_modifier(Modifier::BOLD),
+            table_header_style: color!(HIGHLIGHT_COLOUR)
+                .add_modifier(Modifier::BOLD),
             widget_title_style: color!(TEXT_COLOUR),
             graph_style: color!(TEXT_COLOUR),
             graph_legend_style: color!(TEXT_COLOUR),
@@ -106,7 +108,8 @@ impl Styles {
             border_style: color!(Color::Black),
             text_style: color!(Color::Black),
             selected_text_style: color!(Color::White).bg(Color::LightBlue),
-            table_header_style: color!(Color::Black).add_modifier(Modifier::BOLD),
+            table_header_style: color!(Color::Black)
+                .add_modifier(Modifier::BOLD),
             widget_title_style: color!(Color::Black),
             graph_style: color!(Color::Black),
             graph_legend_style: color!(Color::Black),

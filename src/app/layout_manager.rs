@@ -31,7 +31,9 @@ impl Ratio for Constraint {
             Constraint::Min(min) => std::cmp::max(*min, 1),
             Constraint::Length(_) => 1,
             Constraint::Fill(scaling) => *scaling,
-            _ => unreachable!("if this gets hit then you're refactoring layouts"),
+            _ => {
+                unreachable!("if this gets hit then you're refactoring layouts")
+            }
         }
     }
 }
@@ -58,20 +60,24 @@ impl BottomLayout {
 
         // Now we need to create the correct mapping for moving from a specific
         // widget to another
-        let mut layout_mapping: BTreeMap<LineSegment, ColumnMappings> = BTreeMap::new();
+        let mut layout_mapping: BTreeMap<LineSegment, ColumnMappings> =
+            BTreeMap::new();
         let mut total_height = 0;
         for row in &self.rows {
             let mut row_width = 0;
-            let mut row_mapping: BTreeMap<LineSegment, ColumnRowMappings> = BTreeMap::new();
+            let mut row_mapping: BTreeMap<LineSegment, ColumnRowMappings> =
+                BTreeMap::new();
             let mut is_valid_row = false;
             for col in &row.children {
                 let mut col_row_height = 0;
-                let mut col_mapping: BTreeMap<LineSegment, WidgetMappings> = BTreeMap::new();
+                let mut col_mapping: BTreeMap<LineSegment, WidgetMappings> =
+                    BTreeMap::new();
                 let mut is_valid_col = false;
 
                 for col_row in &col.children {
                     let mut widget_width = 0;
-                    let mut col_row_mapping: BTreeMap<LineSegment, u64> = BTreeMap::new();
+                    let mut col_row_mapping: BTreeMap<LineSegment, u64> =
+                        BTreeMap::new();
                     let mut is_valid_col_row = false;
                     for widget in &col_row.children {
                         let widget_ratio = widget
@@ -84,7 +90,8 @@ impl BottomLayout {
                                 is_valid_col_row = true;
                                 col_row_mapping.insert(
                                     (
-                                        widget_width * 100 / col_row.total_widget_ratio,
+                                        widget_width * 100
+                                            / col_row.total_widget_ratio,
                                         (widget_width + widget_ratio) * 100
                                             / col_row.total_widget_ratio,
                                     ),
@@ -98,7 +105,8 @@ impl BottomLayout {
                         col_mapping.insert(
                             (
                                 col_row_height * 100 / col.total_col_row_ratio,
-                                (col_row_height + col_row.constraint.ratio()) * 100
+                                (col_row_height + col_row.constraint.ratio())
+                                    * 100
                                     / col.total_col_row_ratio,
                             ),
                             (col.total_col_row_ratio, col_row_mapping),
@@ -112,7 +120,8 @@ impl BottomLayout {
                     row_mapping.insert(
                         (
                             row_width * 100 / row.total_col_ratio,
-                            (row_width + col.constraint.ratio()) * 100 / row.total_col_ratio,
+                            (row_width + col.constraint.ratio()) * 100
+                                / row.total_col_ratio,
                         ),
                         (row.total_col_ratio, col_mapping),
                     );
@@ -125,7 +134,8 @@ impl BottomLayout {
                 layout_mapping.insert(
                     (
                         total_height * 100 / self.total_row_height_ratio,
-                        (total_height + row.constraint.ratio()) * 100 / self.total_row_height_ratio,
+                        (total_height + row.constraint.ratio()) * 100
+                            / self.total_row_height_ratio,
                     ),
                     (self.total_row_height_ratio, row_mapping),
                 );
@@ -138,15 +148,19 @@ impl BottomLayout {
         let mut height_cursor = 0;
         for row in &mut self.rows {
             let mut col_cursor = 0;
-            let row_height_percentage_start = height_cursor * 100 / self.total_row_height_ratio;
+            let row_height_percentage_start =
+                height_cursor * 100 / self.total_row_height_ratio;
             let row_height_percentage_end =
-                (height_cursor + row.constraint.ratio()) * 100 / self.total_row_height_ratio;
+                (height_cursor + row.constraint.ratio()) * 100
+                    / self.total_row_height_ratio;
 
             for col in &mut row.children {
                 let mut col_row_cursor = 0;
-                let col_width_percentage_start = col_cursor * 100 / row.total_col_ratio;
+                let col_width_percentage_start =
+                    col_cursor * 100 / row.total_col_ratio;
                 let col_width_percentage_end =
-                    (col_cursor + col.constraint.ratio()) * 100 / row.total_col_ratio;
+                    (col_cursor + col.constraint.ratio()) * 100
+                        / row.total_col_ratio;
 
                 for col_row in &mut col.children {
                     let mut widget_cursor = 0;
@@ -170,20 +184,24 @@ impl BottomLayout {
                         let widget_width_percentage_start =
                             widget_cursor * 100 / col_row.total_widget_ratio;
                         let widget_width_percentage_end =
-                            (widget_cursor + widget_ratio) * 100 / col_row.total_widget_ratio;
+                            (widget_cursor + widget_ratio) * 100
+                                / col_row.total_widget_ratio;
 
-                        if let Some(current_row) = layout_mapping
-                            .get(&(row_height_percentage_start, row_height_percentage_end))
-                        {
+                        if let Some(current_row) = layout_mapping.get(&(
+                            row_height_percentage_start,
+                            row_height_percentage_end,
+                        )) {
                             // First check for within the same col_row for left and right
-                            if let Some(current_col) = current_row
-                                .1
-                                .get(&(col_width_percentage_start, col_width_percentage_end))
-                            {
-                                if let Some(current_col_row) = current_col.1.get(&(
-                                    col_row_height_percentage_start,
-                                    col_row_height_percentage_end,
-                                )) {
+                            if let Some(current_col) = current_row.1.get(&(
+                                col_width_percentage_start,
+                                col_width_percentage_end,
+                            )) {
+                                if let Some(current_col_row) =
+                                    current_col.1.get(&(
+                                        col_row_height_percentage_start,
+                                        col_row_height_percentage_end,
+                                    ))
+                                {
                                     if let Some(to_left_widget) = current_col_row
                                         .1
                                         .range(
@@ -198,17 +216,19 @@ impl BottomLayout {
                                     }
 
                                     // Right
-                                    if let Some(to_right_neighbour) = current_col_row
-                                        .1
-                                        .range(
-                                            (
-                                                widget_width_percentage_end,
-                                                widget_width_percentage_end,
-                                            )..,
-                                        )
-                                        .next()
+                                    if let Some(to_right_neighbour) =
+                                        current_col_row
+                                            .1
+                                            .range(
+                                                (
+                                                    widget_width_percentage_end,
+                                                    widget_width_percentage_end,
+                                                )..,
+                                            )
+                                            .next()
                                     {
-                                        widget.right_neighbour = Some(*to_right_neighbour.1);
+                                        widget.right_neighbour =
+                                            Some(*to_right_neighbour.1);
                                     }
                                 }
                             }
@@ -217,17 +237,23 @@ impl BottomLayout {
                                 if let Some(to_left_col) = current_row
                                     .1
                                     .range(
-                                        ..(col_width_percentage_start, col_width_percentage_start),
+                                        ..(
+                                            col_width_percentage_start,
+                                            col_width_percentage_start,
+                                        ),
                                     )
                                     .next_back()
                                 {
                                     // Check left in same row
                                     let mut current_best_distance = 0;
-                                    let mut current_best_widget_id = widget.widget_id;
+                                    let mut current_best_widget_id =
+                                        widget.widget_id;
 
                                     for widget_position in &(to_left_col.1).1 {
-                                        let candidate_start = (widget_position.0).0;
-                                        let candidate_end = (widget_position.0).1;
+                                        let candidate_start =
+                                            (widget_position.0).0;
+                                        let candidate_end =
+                                            (widget_position.0).1;
 
                                         if is_intersecting(
                                             (
@@ -244,18 +270,26 @@ impl BottomLayout {
                                                 (candidate_start, candidate_end),
                                             );
 
-                                            if current_best_distance < candidate_distance {
+                                            if current_best_distance
+                                                < candidate_distance
+                                            {
                                                 if let Some(new_best_widget) =
-                                                    (widget_position.1).1.iter().next_back()
+                                                    (widget_position.1)
+                                                        .1
+                                                        .iter()
+                                                        .next_back()
                                                 {
-                                                    current_best_distance = candidate_distance + 1;
-                                                    current_best_widget_id = *(new_best_widget.1);
+                                                    current_best_distance =
+                                                        candidate_distance + 1;
+                                                    current_best_widget_id =
+                                                        *(new_best_widget.1);
                                                 }
                                             }
                                         }
                                     }
                                     if current_best_distance > 0 {
-                                        widget.left_neighbour = Some(current_best_widget_id);
+                                        widget.left_neighbour =
+                                            Some(current_best_widget_id);
                                     }
                                 }
                             }
@@ -263,16 +297,24 @@ impl BottomLayout {
                             if widget.right_neighbour.is_none() {
                                 if let Some(to_right_col) = current_row
                                     .1
-                                    .range((col_width_percentage_end, col_width_percentage_end)..)
+                                    .range(
+                                        (
+                                            col_width_percentage_end,
+                                            col_width_percentage_end,
+                                        )..,
+                                    )
                                     .next()
                                 {
                                     // Check right in same row
                                     let mut current_best_distance = 0;
-                                    let mut current_best_widget_id = widget.widget_id;
+                                    let mut current_best_widget_id =
+                                        widget.widget_id;
 
                                     for widget_position in &(to_right_col.1).1 {
-                                        let candidate_start = (widget_position.0).0;
-                                        let candidate_end = (widget_position.0).1;
+                                        let candidate_start =
+                                            (widget_position.0).0;
+                                        let candidate_end =
+                                            (widget_position.0).1;
 
                                         if is_intersecting(
                                             (
@@ -289,28 +331,36 @@ impl BottomLayout {
                                                 (candidate_start, candidate_end),
                                             );
 
-                                            if current_best_distance < candidate_distance {
+                                            if current_best_distance
+                                                < candidate_distance
+                                            {
                                                 if let Some(new_best_widget) =
-                                                    (widget_position.1).1.iter().next()
+                                                    (widget_position.1)
+                                                        .1
+                                                        .iter()
+                                                        .next()
                                                 {
-                                                    current_best_distance = candidate_distance + 1;
-                                                    current_best_widget_id = *(new_best_widget.1);
+                                                    current_best_distance =
+                                                        candidate_distance + 1;
+                                                    current_best_widget_id =
+                                                        *(new_best_widget.1);
                                                 }
                                             }
                                         }
                                     }
                                     if current_best_distance > 0 {
-                                        widget.right_neighbour = Some(current_best_widget_id);
+                                        widget.right_neighbour =
+                                            Some(current_best_widget_id);
                                     }
                                 }
                             }
 
                             // Check up/down within same row;
                             // else check up/down with other rows
-                            if let Some(current_col) = current_row
-                                .1
-                                .get(&(col_width_percentage_start, col_width_percentage_end))
-                            {
+                            if let Some(current_col) = current_row.1.get(&(
+                                col_width_percentage_start,
+                                col_width_percentage_end,
+                            )) {
                                 if let Some(to_up) = current_col
                                     .1
                                     .range(
@@ -324,13 +374,17 @@ impl BottomLayout {
                                     // Now check each widget_width and pick the best
                                     for candidate_widget in &(to_up.1).1 {
                                         let mut current_best_distance = 0;
-                                        let mut current_best_widget_id = widget.widget_id;
+                                        let mut current_best_widget_id =
+                                            widget.widget_id;
                                         if is_intersecting(
                                             (
                                                 widget_width_percentage_start,
                                                 widget_width_percentage_end,
                                             ),
-                                            ((candidate_widget.0).0, (candidate_widget.0).1),
+                                            (
+                                                (candidate_widget.0).0,
+                                                (candidate_widget.0).1,
+                                            ),
                                         ) {
                                             let candidate_best_distance = get_distance(
                                                 (
@@ -340,14 +394,19 @@ impl BottomLayout {
                                                 ((candidate_widget.0).0, (candidate_widget.0).1),
                                             );
 
-                                            if current_best_distance < candidate_best_distance {
-                                                current_best_distance = candidate_best_distance + 1;
-                                                current_best_widget_id = *candidate_widget.1;
+                                            if current_best_distance
+                                                < candidate_best_distance
+                                            {
+                                                current_best_distance =
+                                                    candidate_best_distance + 1;
+                                                current_best_widget_id =
+                                                    *candidate_widget.1;
                                             }
                                         }
 
                                         if current_best_distance > 0 {
-                                            widget.up_neighbour = Some(current_best_widget_id);
+                                            widget.up_neighbour =
+                                                Some(current_best_widget_id);
                                         }
                                     }
                                 } else {
@@ -361,10 +420,13 @@ impl BottomLayout {
                                         .rev()
                                     {
                                         let mut current_best_distance = 0;
-                                        let mut current_best_widget_id = widget.widget_id;
-                                        let (target_start_width, target_end_width) =
-                                            if col_row_children_len > 1 {
-                                                (
+                                        let mut current_best_widget_id =
+                                            widget.widget_id;
+                                        let (
+                                            target_start_width,
+                                            target_end_width,
+                                        ) = if col_row_children_len > 1 {
+                                            (
                                                     col_width_percentage_start
                                                         + widget_width_percentage_start
                                                             * (col_width_percentage_end
@@ -376,22 +438,33 @@ impl BottomLayout {
                                                                 - col_width_percentage_start)
                                                             / 100,
                                                 )
-                                            } else {
-                                                (
-                                                    col_width_percentage_start,
-                                                    col_width_percentage_end,
-                                                )
-                                            };
+                                        } else {
+                                            (
+                                                col_width_percentage_start,
+                                                col_width_percentage_end,
+                                            )
+                                        };
 
                                         for col_position in &(next_row_up.1).1 {
                                             if let Some(next_col_row) =
-                                                (col_position.1).1.iter().next_back()
+                                                (col_position.1)
+                                                    .1
+                                                    .iter()
+                                                    .next_back()
                                             {
-                                                let (candidate_col_start, candidate_col_end) =
-                                                    ((col_position.0).0, (col_position.0).1);
+                                                let (
+                                                    candidate_col_start,
+                                                    candidate_col_end,
+                                                ) = (
+                                                    (col_position.0).0,
+                                                    (col_position.0).1,
+                                                );
                                                 let candidate_difference =
-                                                    candidate_col_end - candidate_col_start;
-                                                for candidate_widget in &(next_col_row.1).1 {
+                                                    candidate_col_end
+                                                        - candidate_col_start;
+                                                for candidate_widget in
+                                                    &(next_col_row.1).1
+                                                {
                                                     let candidate_start = candidate_col_start
                                                         + (candidate_widget.0).0
                                                             * candidate_difference
@@ -402,8 +475,14 @@ impl BottomLayout {
                                                             / 100;
 
                                                     if is_intersecting(
-                                                        (target_start_width, target_end_width),
-                                                        (candidate_start, candidate_end),
+                                                        (
+                                                            target_start_width,
+                                                            target_end_width,
+                                                        ),
+                                                        (
+                                                            candidate_start,
+                                                            candidate_end,
+                                                        ),
                                                     ) {
                                                         let candidate_distance = get_distance(
                                                             (target_start_width, target_end_width),
@@ -424,7 +503,8 @@ impl BottomLayout {
                                         }
 
                                         if current_best_distance > 0 {
-                                            widget.up_neighbour = Some(current_best_widget_id);
+                                            widget.up_neighbour =
+                                                Some(current_best_widget_id);
                                             break;
                                         }
                                     }
@@ -442,13 +522,17 @@ impl BottomLayout {
                                 {
                                     for candidate_widget in &(to_down.1).1 {
                                         let mut current_best_distance = 0;
-                                        let mut current_best_widget_id = widget.widget_id;
+                                        let mut current_best_widget_id =
+                                            widget.widget_id;
                                         if is_intersecting(
                                             (
                                                 widget_width_percentage_start,
                                                 widget_width_percentage_end,
                                             ),
-                                            ((candidate_widget.0).0, (candidate_widget.0).1),
+                                            (
+                                                (candidate_widget.0).0,
+                                                (candidate_widget.0).1,
+                                            ),
                                         ) {
                                             let candidate_best_distance = get_distance(
                                                 (
@@ -458,14 +542,19 @@ impl BottomLayout {
                                                 ((candidate_widget.0).0, (candidate_widget.0).1),
                                             );
 
-                                            if current_best_distance < candidate_best_distance {
-                                                current_best_distance = candidate_best_distance + 1;
-                                                current_best_widget_id = *candidate_widget.1;
+                                            if current_best_distance
+                                                < candidate_best_distance
+                                            {
+                                                current_best_distance =
+                                                    candidate_best_distance + 1;
+                                                current_best_widget_id =
+                                                    *candidate_widget.1;
                                             }
                                         }
 
                                         if current_best_distance > 0 {
-                                            widget.down_neighbour = Some(current_best_widget_id);
+                                            widget.down_neighbour =
+                                                Some(current_best_widget_id);
                                         }
                                     }
                                 } else {
@@ -476,10 +565,13 @@ impl BottomLayout {
                                         )..,
                                     ) {
                                         let mut current_best_distance = 0;
-                                        let mut current_best_widget_id = widget.widget_id;
-                                        let (target_start_width, target_end_width) =
-                                            if col_row_children_len > 1 {
-                                                (
+                                        let mut current_best_widget_id =
+                                            widget.widget_id;
+                                        let (
+                                            target_start_width,
+                                            target_end_width,
+                                        ) = if col_row_children_len > 1 {
+                                            (
                                                     col_width_percentage_start
                                                         + widget_width_percentage_start
                                                             * (col_width_percentage_end
@@ -491,22 +583,31 @@ impl BottomLayout {
                                                                 - col_width_percentage_start)
                                                             / 100,
                                                 )
-                                            } else {
-                                                (
-                                                    col_width_percentage_start,
-                                                    col_width_percentage_end,
-                                                )
-                                            };
+                                        } else {
+                                            (
+                                                col_width_percentage_start,
+                                                col_width_percentage_end,
+                                            )
+                                        };
 
-                                        for col_position in &(next_row_down.1).1 {
+                                        for col_position in &(next_row_down.1).1
+                                        {
                                             if let Some(next_col_row) =
                                                 (col_position.1).1.iter().next()
                                             {
-                                                let (candidate_col_start, candidate_col_end) =
-                                                    ((col_position.0).0, (col_position.0).1);
+                                                let (
+                                                    candidate_col_start,
+                                                    candidate_col_end,
+                                                ) = (
+                                                    (col_position.0).0,
+                                                    (col_position.0).1,
+                                                );
                                                 let candidate_difference =
-                                                    candidate_col_end - candidate_col_start;
-                                                for candidate_widget in &(next_col_row.1).1 {
+                                                    candidate_col_end
+                                                        - candidate_col_start;
+                                                for candidate_widget in
+                                                    &(next_col_row.1).1
+                                                {
                                                     let candidate_start = candidate_col_start
                                                         + (candidate_widget.0).0
                                                             * candidate_difference
@@ -517,8 +618,14 @@ impl BottomLayout {
                                                             / 100;
 
                                                     if is_intersecting(
-                                                        (target_start_width, target_end_width),
-                                                        (candidate_start, candidate_end),
+                                                        (
+                                                            target_start_width,
+                                                            target_end_width,
+                                                        ),
+                                                        (
+                                                            candidate_start,
+                                                            candidate_end,
+                                                        ),
                                                     ) {
                                                         let candidate_distance = get_distance(
                                                             (target_start_width, target_end_width),
@@ -539,7 +646,8 @@ impl BottomLayout {
                                         }
 
                                         if current_best_distance > 0 {
-                                            widget.down_neighbour = Some(current_best_widget_id);
+                                            widget.down_neighbour =
+                                                Some(current_best_widget_id);
                                             break;
                                         }
                                     }
@@ -564,30 +672,36 @@ impl BottomLayout {
                 .left_neighbour(Some(8))
                 .right_neighbour(Some(DEFAULT_WIDGET_ID + 2));
 
-            let proc_sort = BottomWidget::new(BottomWidgetType::ProcSort, DEFAULT_WIDGET_ID + 2)
-                .canvas_handled()
-                .up_neighbour(Some(100))
-                .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
-                .left_neighbour(Some(4))
-                .right_neighbour(Some(DEFAULT_WIDGET_ID))
-                .ratio(1)
-                .parent_reflector(Some((WidgetDirection::Right, 2)));
+            let proc_sort = BottomWidget::new(
+                BottomWidgetType::ProcSort,
+                DEFAULT_WIDGET_ID + 2,
+            )
+            .canvas_handled()
+            .up_neighbour(Some(100))
+            .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
+            .left_neighbour(Some(4))
+            .right_neighbour(Some(DEFAULT_WIDGET_ID))
+            .ratio(1)
+            .parent_reflector(Some((WidgetDirection::Right, 2)));
 
-            let proc = BottomWidget::new(BottomWidgetType::Proc, DEFAULT_WIDGET_ID)
-                .canvas_handled()
-                .up_neighbour(Some(100))
-                .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
-                .left_neighbour(Some(DEFAULT_WIDGET_ID + 2))
-                .right_neighbour(Some(7))
-                .ratio(2);
-
-            let proc_search =
-                BottomWidget::new(BottomWidgetType::ProcSearch, DEFAULT_WIDGET_ID + 1)
+            let proc =
+                BottomWidget::new(BottomWidgetType::Proc, DEFAULT_WIDGET_ID)
                     .canvas_handled()
-                    .up_neighbour(Some(DEFAULT_WIDGET_ID))
-                    .left_neighbour(Some(4))
+                    .up_neighbour(Some(100))
+                    .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
+                    .left_neighbour(Some(DEFAULT_WIDGET_ID + 2))
                     .right_neighbour(Some(7))
-                    .parent_reflector(Some((WidgetDirection::Up, 1)));
+                    .ratio(2);
+
+            let proc_search = BottomWidget::new(
+                BottomWidgetType::ProcSearch,
+                DEFAULT_WIDGET_ID + 1,
+            )
+            .canvas_handled()
+            .up_neighbour(Some(DEFAULT_WIDGET_ID))
+            .left_neighbour(Some(4))
+            .right_neighbour(Some(7))
+            .parent_reflector(Some((WidgetDirection::Up, 1)));
 
             let temp = BottomWidget::new(BottomWidgetType::Temp, 7)
                 .canvas_handled()
@@ -602,8 +716,10 @@ impl BottomLayout {
                 .right_neighbour(Some(4));
 
             vec![
-                BottomCol::new(vec![BottomColRow::new(vec![disk_widget]).canvas_handled()])
-                    .canvas_handled(),
+                BottomCol::new(vec![
+                    BottomColRow::new(vec![disk_widget]).canvas_handled(),
+                ])
+                .canvas_handled(),
                 BottomCol::new(vec![
                     BottomColRow::new(vec![proc_sort, proc])
                         .canvas_handled()
@@ -611,10 +727,14 @@ impl BottomLayout {
                     BottomColRow::new(vec![proc_search]).canvas_handled(),
                 ])
                 .canvas_handled(),
-                BottomCol::new(vec![BottomColRow::new(vec![temp]).canvas_handled()])
-                    .canvas_handled(),
-                BottomCol::new(vec![BottomColRow::new(vec![battery]).canvas_handled()])
-                    .canvas_handled(),
+                BottomCol::new(vec![
+                    BottomColRow::new(vec![temp]).canvas_handled(),
+                ])
+                .canvas_handled(),
+                BottomCol::new(vec![
+                    BottomColRow::new(vec![battery]).canvas_handled(),
+                ])
+                .canvas_handled(),
             ]
         } else {
             let disk = BottomWidget::new(BottomWidgetType::Disk, 4)
@@ -623,28 +743,34 @@ impl BottomLayout {
                 .left_neighbour(Some(7))
                 .right_neighbour(Some(DEFAULT_WIDGET_ID + 2));
 
-            let proc_sort = BottomWidget::new(BottomWidgetType::ProcSort, DEFAULT_WIDGET_ID + 2)
-                .canvas_handled()
-                .up_neighbour(Some(100))
-                .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
-                .left_neighbour(Some(4))
-                .right_neighbour(Some(DEFAULT_WIDGET_ID))
-                .parent_reflector(Some((WidgetDirection::Right, 2)));
+            let proc_sort = BottomWidget::new(
+                BottomWidgetType::ProcSort,
+                DEFAULT_WIDGET_ID + 2,
+            )
+            .canvas_handled()
+            .up_neighbour(Some(100))
+            .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
+            .left_neighbour(Some(4))
+            .right_neighbour(Some(DEFAULT_WIDGET_ID))
+            .parent_reflector(Some((WidgetDirection::Right, 2)));
 
-            let proc = BottomWidget::new(BottomWidgetType::Proc, DEFAULT_WIDGET_ID)
-                .canvas_handled()
-                .up_neighbour(Some(100))
-                .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
-                .left_neighbour(Some(DEFAULT_WIDGET_ID + 2))
-                .right_neighbour(Some(7));
-
-            let proc_search =
-                BottomWidget::new(BottomWidgetType::ProcSearch, DEFAULT_WIDGET_ID + 1)
+            let proc =
+                BottomWidget::new(BottomWidgetType::Proc, DEFAULT_WIDGET_ID)
                     .canvas_handled()
-                    .up_neighbour(Some(DEFAULT_WIDGET_ID))
-                    .left_neighbour(Some(4))
-                    .right_neighbour(Some(7))
-                    .parent_reflector(Some((WidgetDirection::Up, 1)));
+                    .up_neighbour(Some(100))
+                    .down_neighbour(Some(DEFAULT_WIDGET_ID + 1))
+                    .left_neighbour(Some(DEFAULT_WIDGET_ID + 2))
+                    .right_neighbour(Some(7));
+
+            let proc_search = BottomWidget::new(
+                BottomWidgetType::ProcSearch,
+                DEFAULT_WIDGET_ID + 1,
+            )
+            .canvas_handled()
+            .up_neighbour(Some(DEFAULT_WIDGET_ID))
+            .left_neighbour(Some(4))
+            .right_neighbour(Some(7))
+            .parent_reflector(Some((WidgetDirection::Up, 1)));
 
             let temp = BottomWidget::new(BottomWidgetType::Temp, 7)
                 .canvas_handled()
@@ -653,15 +779,19 @@ impl BottomLayout {
                 .right_neighbour(Some(4));
 
             vec![
-                BottomCol::new(vec![BottomColRow::new(vec![disk]).canvas_handled()])
-                    .canvas_handled(),
+                BottomCol::new(vec![
+                    BottomColRow::new(vec![disk]).canvas_handled(),
+                ])
+                .canvas_handled(),
                 BottomCol::new(vec![
                     BottomColRow::new(vec![proc_sort, proc]).canvas_handled(),
                     BottomColRow::new(vec![proc_search]).canvas_handled(),
                 ])
                 .canvas_handled(),
-                BottomCol::new(vec![BottomColRow::new(vec![temp]).canvas_handled()])
-                    .canvas_handled(),
+                BottomCol::new(vec![
+                    BottomColRow::new(vec![temp]).canvas_handled(),
+                ])
+                .canvas_handled(),
             ]
         };
 
@@ -689,18 +819,24 @@ impl BottomLayout {
             total_row_height_ratio: 3,
             rows: vec![
                 BottomRow::new(vec![
-                    BottomCol::new(vec![BottomColRow::new(vec![cpu]).canvas_handled()])
-                        .canvas_handled(),
+                    BottomCol::new(vec![
+                        BottomColRow::new(vec![cpu]).canvas_handled(),
+                    ])
+                    .canvas_handled(),
                 ])
                 .canvas_handled(),
                 BottomRow::new(vec![
-                    BottomCol::new(vec![BottomColRow::new(vec![mem, net]).canvas_handled()])
-                        .canvas_handled(),
+                    BottomCol::new(vec![
+                        BottomColRow::new(vec![mem, net]).canvas_handled(),
+                    ])
+                    .canvas_handled(),
                 ])
                 .canvas_handled(),
                 BottomRow::new(vec![
-                    BottomCol::new(vec![BottomColRow::new(vec![table]).canvas_handled()])
-                        .canvas_handled(),
+                    BottomCol::new(vec![
+                        BottomColRow::new(vec![table]).canvas_handled(),
+                    ])
+                    .canvas_handled(),
                 ])
                 .canvas_handled(),
                 BottomRow::new(table_widgets).canvas_handled(),
@@ -793,7 +929,9 @@ impl BottomColRow {
         }
     }
 
-    pub(crate) fn total_widget_ratio(mut self, total_widget_ratio: u16) -> Self {
+    pub(crate) fn total_widget_ratio(
+        mut self, total_widget_ratio: u16,
+    ) -> Self {
         self.total_widget_ratio = total_widget_ratio;
         self
     }
@@ -879,12 +1017,16 @@ impl BottomWidget {
         }
     }
 
-    pub(crate) fn left_neighbour(mut self, left_neighbour: Option<u64>) -> Self {
+    pub(crate) fn left_neighbour(
+        mut self, left_neighbour: Option<u64>,
+    ) -> Self {
         self.left_neighbour = left_neighbour;
         self
     }
 
-    pub(crate) fn right_neighbour(mut self, right_neighbour: Option<u64>) -> Self {
+    pub(crate) fn right_neighbour(
+        mut self, right_neighbour: Option<u64>,
+    ) -> Self {
         self.right_neighbour = right_neighbour;
         self
     }
@@ -894,7 +1036,9 @@ impl BottomWidget {
         self
     }
 
-    pub(crate) fn down_neighbour(mut self, down_neighbour: Option<u64>) -> Self {
+    pub(crate) fn down_neighbour(
+        mut self, down_neighbour: Option<u64>,
+    ) -> Self {
         self.down_neighbour = down_neighbour;
         self
     }

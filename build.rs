@@ -26,7 +26,9 @@ fn create_dir(dir: &Path) -> io::Result<()> {
     })
 }
 
-fn generate_completions<G>(to_generate: G, cmd: &mut Command, out_dir: &Path) -> io::Result<PathBuf>
+fn generate_completions<G>(
+    to_generate: G, cmd: &mut Command, out_dir: &Path,
+) -> io::Result<PathBuf>
 where
     G: Generator,
 {
@@ -38,9 +40,10 @@ fn btm_generate() -> io::Result<()> {
 
     match env::var_os(ENV_KEY) {
         Some(var) if !var.is_empty() => {
-            let completion_dir =
-                option_env!("COMPLETION_DIR").unwrap_or("./target/tmp/bottom/completion/");
-            let manpage_dir = option_env!("MANPAGE_DIR").unwrap_or("./target/tmp/bottom/manpage/");
+            let completion_dir = option_env!("COMPLETION_DIR")
+                .unwrap_or("./target/tmp/bottom/completion/");
+            let manpage_dir = option_env!("MANPAGE_DIR")
+                .unwrap_or("./target/tmp/bottom/manpage/");
 
             let completion_out_dir = PathBuf::from(completion_dir);
             let manpage_out_dir = PathBuf::from(manpage_dir);
@@ -53,7 +56,11 @@ fn btm_generate() -> io::Result<()> {
             generate_completions(Shell::Bash, &mut app, &completion_out_dir)?;
             generate_completions(Shell::Zsh, &mut app, &completion_out_dir)?;
             generate_completions(Shell::Fish, &mut app, &completion_out_dir)?;
-            generate_completions(Shell::PowerShell, &mut app, &completion_out_dir)?;
+            generate_completions(
+                Shell::PowerShell,
+                &mut app,
+                &completion_out_dir,
+            )?;
             generate_completions(Shell::Elvish, &mut app, &completion_out_dir)?;
             generate_completions(Fig, &mut app, &completion_out_dir)?;
             generate_completions(Nushell, &mut app, &completion_out_dir)?;
@@ -88,7 +95,9 @@ fn nightly_version() {
         Some(var) if !var.is_empty() && var == "ci" => {
             let version = env!("CARGO_PKG_VERSION");
 
-            if let Some(hash) = extract_sha(option_env!("CIRRUS_CHANGE_IN_REPO")) {
+            if let Some(hash) =
+                extract_sha(option_env!("CIRRUS_CHANGE_IN_REPO"))
+            {
                 // May be set if we're building with Cirrus CI.
                 output_nightly_version(version, hash);
             } else if let Some(hash) = extract_sha(option_env!("GITHUB_SHA")) {

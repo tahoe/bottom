@@ -3,7 +3,9 @@
 use super::{DiskHarvest, keep_disk_entry};
 use crate::collection::DataCollector;
 
-pub(crate) fn get_disk_usage(collector: &DataCollector) -> anyhow::Result<Vec<DiskHarvest>> {
+pub(crate) fn get_disk_usage(
+    collector: &DataCollector,
+) -> anyhow::Result<Vec<DiskHarvest>> {
     let disks = &collector.sys.disks;
     let disk_filter = &collector.filters.disk_filter;
     let mount_filter = &collector.filters.mount_filter;

@@ -139,7 +139,8 @@ impl Styles {
     pub fn new(args: &BottomArgs, config: &Config) -> anyhow::Result<Self> {
         let mut palette = match &args.style.theme {
             Some(theme) => Self::from_theme(theme)?,
-            None => match config.styles.as_ref().and_then(|s| s.theme.as_ref()) {
+            None => match config.styles.as_ref().and_then(|s| s.theme.as_ref())
+            {
                 Some(theme) => Self::from_theme(theme)?,
                 None => Self::default(),
             },
@@ -162,14 +163,16 @@ impl Styles {
             "gruvbox-light" => Ok(Self::gruvbox_light_palette()),
             "nord" => Ok(Self::nord_palette()),
             "nord-light" => Ok(Self::nord_light_palette()),
-            _ => Err(
-                OptionError::other(format!("'{theme}' is an invalid built-in color scheme."))
-                    .into(),
-            ),
+            _ => Err(OptionError::other(format!(
+                "'{theme}' is an invalid built-in color scheme."
+            ))
+            .into()),
         }
     }
 
-    fn set_styles_from_config(&mut self, config: &StyleConfig) -> OptionResult<()> {
+    fn set_styles_from_config(
+        &mut self, config: &StyleConfig,
+    ) -> OptionResult<()> {
         // CPU
         set_colour!(self.avg_cpu_colour, config.cpu, avg_entry_color);
         set_colour!(self.all_cpu_colour, config.cpu, all_entry_color);
@@ -246,8 +249,10 @@ mod test {
     #[test]
     fn default_selected_colour_works() {
         let mut colours = Styles::default();
-        let original_selected_text_colour = Styles::default_style().selected_text_style.fg.unwrap();
-        let original_selected_bg_colour = Styles::default_style().selected_text_style.bg.unwrap();
+        let original_selected_text_colour =
+            Styles::default_style().selected_text_style.fg.unwrap();
+        let original_selected_bg_colour =
+            Styles::default_style().selected_text_style.bg.unwrap();
 
         assert_eq!(
             colours.selected_text_style,

@@ -126,7 +126,11 @@ pub struct SysinfoSource {
     pub(crate) network: sysinfo::Networks,
     #[cfg(not(target_os = "linux"))]
     pub(crate) temps: sysinfo::Components,
-    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "freebsd")))]
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "freebsd"
+    )))]
     pub(crate) disks: sysinfo::Disks,
     #[cfg(target_os = "windows")]
     pub(crate) users: sysinfo::Users,
@@ -141,7 +145,11 @@ impl Default for SysinfoSource {
             network: Networks::new(),
             #[cfg(not(target_os = "linux"))]
             temps: Components::new(),
-            #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "freebsd")))]
+            #[cfg(not(any(
+                target_os = "linux",
+                target_os = "macos",
+                target_os = "freebsd"
+            )))]
             disks: Disks::new(),
             #[cfg(target_os = "windows")]
             users: Users::new(),
@@ -197,7 +205,8 @@ impl DataCollector {
     pub fn new(filters: DataFilters) -> Self {
         // Initialize it to the past to force it to load on initialization.
         let now = Instant::now();
-        let last_collection_time = now.checked_sub(LESS_ROUTINE_TASK_TIME * 10).unwrap_or(now);
+        let last_collection_time =
+            now.checked_sub(LESS_ROUTINE_TASK_TIME * 10).unwrap_or(now);
 
         DataCollector {
             data: Data::default(),
@@ -386,14 +395,16 @@ impl DataCollector {
     fn update_gpus(&mut self) {
         if self.widgets_to_harvest.use_gpu {
             let mut local_gpu: Vec<(String, memory::MemData)> = Vec::new();
-            let mut local_gpu_stats: Vec<(String, nvidia::GpuStats)> = Vec::new();
+            let mut local_gpu_stats: Vec<(String, nvidia::GpuStats)> =
+                Vec::new();
             let mut local_gpu_pids: Vec<HashMap<u32, (u64, u32)>> = Vec::new();
             let mut local_gpu_total_mem: u64 = 0;
 
             #[cfg(feature = "nvidia")]
-            if let Some(data) =
-                nvidia::get_nvidia_vecs(&self.filters.temp_filter, &self.widgets_to_harvest)
-            {
+            if let Some(data) = nvidia::get_nvidia_vecs(
+                &self.filters.temp_filter,
+                &self.widgets_to_harvest,
+            ) {
                 if let Some(mut temp) = data.temperature {
                     if let Some(sensors) = &mut self.data.temperature_sensors {
                         sensors.append(&mut temp);
@@ -414,9 +425,10 @@ impl DataCollector {
             }
 
             #[cfg(target_os = "linux")]
-            if let Some(data) =
-                amd::get_amd_vecs(&self.widgets_to_harvest, self.last_collection_time)
-            {
+            if let Some(data) = amd::get_amd_vecs(
+                &self.widgets_to_harvest,
+                self.last_collection_time,
+            ) {
                 if let Some(mut mem) = data.memory {
                     local_gpu.append(&mut mem);
                 }
@@ -427,16 +439,21 @@ impl DataCollector {
             }
 
             self.data.gpu = (!local_gpu.is_empty()).then_some(local_gpu);
-            self.data.gpu_stats = (!local_gpu_stats.is_empty()).then_some(local_gpu_stats);
-            self.gpu_pids = (!local_gpu_pids.is_empty()).then_some(local_gpu_pids);
-            self.gpus_total_mem = (local_gpu_total_mem > 0).then_some(local_gpu_total_mem);
+            self.data.gpu_stats =
+                (!local_gpu_stats.is_empty()).then_some(local_gpu_stats);
+            self.gpu_pids =
+                (!local_gpu_pids.is_empty()).then_some(local_gpu_pids);
+            self.gpus_total_mem =
+                (local_gpu_total_mem > 0).then_some(local_gpu_total_mem);
         }
     }
 
     #[inline]
     fn update_cpu_usage(&mut self) {
         if self.widgets_to_harvest.use_cpu {
-            self.data.cpu = cpu::get_cpu_data_list(&self.sys.system, self.show_average_cpu).ok();
+            self.data.cpu =
+                cpu::get_cpu_data_list(&self.sys.system, self.show_average_cpu)
+                    .ok();
 
             #[cfg(target_family = "unix")]
             {
@@ -462,14 +479,17 @@ impl DataCollector {
     fn update_temps(&mut self) {
         if self.widgets_to_harvest.use_temp {
             #[cfg(not(target_os = "linux"))]
-            if let Ok(data) =
-                temperature::get_temperature_data(&self.sys.temps, &self.filters.temp_filter)
-            {
+            if let Ok(data) = temperature::get_temperature_data(
+                &self.sys.temps,
+                &self.filters.temp_filter,
+            ) {
                 self.data.temperature_sensors = data;
             }
 
             #[cfg(target_os = "linux")]
-            if let Ok(data) = temperature::get_temperature_data(&self.filters.temp_filter) {
+            if let Ok(data) =
+                temperature::get_temperature_data(&self.filters.temp_filter)
+            {
                 self.data.temperature_sensors = data;
             }
         }
@@ -489,7 +509,8 @@ impl DataCollector {
                             if arc.0.used_bytes > arc.1 {
                                 #[cfg(target_os = "linux")]
                                 {
-                                    mem.used_bytes -= arc.0.used_bytes.saturating_sub(arc.1); // keep arc min like htop
+                                    mem.used_bytes -=
+                                        arc.0.used_bytes.saturating_sub(arc.1); // keep arc min like htop
                                 }
                                 #[cfg(target_os = "freebsd")]
                                 {
@@ -552,9 +573,9 @@ impl DataCollector {
             Some(manager) => {
                 // Also check if we need to refresh the list of batteries.
                 if self.should_run_less_routine_tasks {
-                    let battery_list = manager
-                        .batteries()
-                        .map(|batteries| batteries.filter_map(Result::ok).collect::<Vec<_>>());
+                    let battery_list = manager.batteries().map(|batteries| {
+                        batteries.filter_map(Result::ok).collect::<Vec<_>>()
+                    });
 
                     if let Ok(battery_list) = battery_list {
                         if battery_list.is_empty() {
@@ -575,7 +596,8 @@ impl DataCollector {
                         return;
                     };
 
-                    let battery_list = batteries.filter_map(Result::ok).collect::<Vec<_>>();
+                    let battery_list =
+                        batteries.filter_map(Result::ok).collect::<Vec<_>>();
 
                     if battery_list.is_empty() {
                         return;
@@ -589,10 +611,10 @@ impl DataCollector {
             }
         };
 
-        self.data.list_of_batteries = self
-            .battery_list
-            .as_mut()
-            .map(|battery_list| batteries::refresh_batteries(battery_manager, battery_list));
+        self.data.list_of_batteries =
+            self.battery_list.as_mut().map(|battery_list| {
+                batteries::refresh_batteries(battery_manager, battery_list)
+            });
     }
 
     #[inline]

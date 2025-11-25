@@ -18,7 +18,9 @@ use crate::{
     },
     collection::processes::{Pid, ProcessHarvest},
     dec_bytes_per_second_string,
-    utils::data_units::{GIBI_LIMIT, GIGA_LIMIT, get_binary_bytes, get_decimal_bytes},
+    utils::data_units::{
+        GIBI_LIMIT, GIGA_LIMIT, get_binary_bytes, get_decimal_bytes,
+    },
 };
 
 #[derive(Clone, Debug)]
@@ -105,7 +107,9 @@ impl PartialOrd for MemUsage {
 impl Display for MemUsage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MemUsage::Percent(percent) => f.write_fmt(format_args!("{percent:.1}%")),
+            MemUsage::Percent(percent) => {
+                f.write_fmt(format_args!("{percent:.1}%"))
+            }
             MemUsage::Bytes(bytes) => f.write_str(&binary_byte_string(*bytes)),
         }
     }
@@ -221,7 +225,9 @@ pub struct ProcWidgetData {
 }
 
 impl ProcWidgetData {
-    pub fn from_data(process: &ProcessHarvest, is_command: bool, is_mem_percent: bool) -> Self {
+    pub fn from_data(
+        process: &ProcessHarvest, is_command: bool, is_mem_percent: bool,
+    ) -> Self {
         let id = Id {
             id_type: if is_command {
                 IdType::Command(process.command.clone())
@@ -280,11 +286,15 @@ impl ProcWidgetData {
     pub fn add(&mut self, other: &Self) {
         self.cpu_usage_percent += other.cpu_usage_percent;
         self.mem_usage = match (&self.mem_usage, &other.mem_usage) {
-            (MemUsage::Percent(a), MemUsage::Percent(b)) => MemUsage::Percent(a + b),
+            (MemUsage::Percent(a), MemUsage::Percent(b)) => {
+                MemUsage::Percent(a + b)
+            }
             (MemUsage::Bytes(a), MemUsage::Bytes(b)) => MemUsage::Bytes(a + b),
             (MemUsage::Percent(_), MemUsage::Bytes(_))
             | (MemUsage::Bytes(_), MemUsage::Percent(_)) => {
-                unreachable!("trying to add together two different memory usage types!")
+                unreachable!(
+                    "trying to add together two different memory usage types!"
+                )
             }
         };
         self.rps += other.rps;
@@ -294,12 +304,21 @@ impl ProcWidgetData {
         self.time = self.time.max(other.time);
         #[cfg(feature = "gpu")]
         {
-            self.gpu_mem_usage = match (&self.gpu_mem_usage, &other.gpu_mem_usage) {
-                (MemUsage::Percent(a), MemUsage::Percent(b)) => MemUsage::Percent(a + b),
-                (MemUsage::Bytes(a), MemUsage::Bytes(b)) => MemUsage::Bytes(a + b),
+            self.gpu_mem_usage = match (
+                &self.gpu_mem_usage,
+                &other.gpu_mem_usage,
+            ) {
+                (MemUsage::Percent(a), MemUsage::Percent(b)) => {
+                    MemUsage::Percent(a + b)
+                }
+                (MemUsage::Bytes(a), MemUsage::Bytes(b)) => {
+                    MemUsage::Bytes(a + b)
+                }
                 (MemUsage::Percent(_), MemUsage::Bytes(_))
                 | (MemUsage::Bytes(_), MemUsage::Percent(_)) => {
-                    unreachable!("trying to add together two different memory usage types!")
+                    unreachable!(
+                        "trying to add together two different memory usage types!"
+                    )
                 }
             };
             self.gpu_usage += other.gpu_usage;
@@ -309,11 +328,15 @@ impl ProcWidgetData {
     fn to_string(&self, column: &ProcColumn) -> String {
         match column {
             ProcColumn::CpuPercent => format!("{:.1}%", self.cpu_usage_percent),
-            ProcColumn::MemValue | ProcColumn::MemPercent => self.mem_usage.to_string(),
+            ProcColumn::MemValue | ProcColumn::MemPercent => {
+                self.mem_usage.to_string()
+            }
             ProcColumn::VirtualMem => binary_byte_string(self.virtual_mem),
             ProcColumn::Pid => self.pid.to_string(),
             ProcColumn::Count => self.num_similar.to_string(),
-            ProcColumn::Name | ProcColumn::Command => self.id.to_prefixed_string(),
+            ProcColumn::Name | ProcColumn::Command => {
+                self.id.to_prefixed_string()
+            }
             ProcColumn::ReadPerSecond => dec_bytes_per_second_string(self.rps),
             ProcColumn::WritePerSecond => dec_bytes_per_second_string(self.wps),
             ProcColumn::TotalRead => dec_bytes_string(self.total_read),
@@ -326,7 +349,9 @@ impl ProcWidgetData {
                 .unwrap_or_else(|| "N/A".to_string()),
             ProcColumn::Time => format_time(self.time),
             #[cfg(feature = "gpu")]
-            ProcColumn::GpuMemValue | ProcColumn::GpuMemPercent => self.gpu_mem_usage.to_string(),
+            ProcColumn::GpuMemValue | ProcColumn::GpuMemPercent => {
+                self.gpu_mem_usage.to_string()
+            }
             #[cfg(feature = "gpu")]
             ProcColumn::GpuUtilPercent => format!("{:.1}%", self.gpu_usage),
         }
@@ -343,14 +368,26 @@ impl DataToCell<ProcColumn> for ProcWidgetData {
         // TODO: Also maybe just pull in the to_string call but add a variable for the
         // differences.
         Some(match column {
-            ProcColumn::CpuPercent => format!("{:.1}%", self.cpu_usage_percent).into(),
-            ProcColumn::MemValue | ProcColumn::MemPercent => self.mem_usage.to_string().into(),
-            ProcColumn::VirtualMem => binary_byte_string(self.virtual_mem).into(),
+            ProcColumn::CpuPercent => {
+                format!("{:.1}%", self.cpu_usage_percent).into()
+            }
+            ProcColumn::MemValue | ProcColumn::MemPercent => {
+                self.mem_usage.to_string().into()
+            }
+            ProcColumn::VirtualMem => {
+                binary_byte_string(self.virtual_mem).into()
+            }
             ProcColumn::Pid => self.pid.to_string().into(),
             ProcColumn::Count => self.num_similar.to_string().into(),
-            ProcColumn::Name | ProcColumn::Command => self.id.to_prefixed_string().into(),
-            ProcColumn::ReadPerSecond => dec_bytes_per_second_string(self.rps).into(),
-            ProcColumn::WritePerSecond => dec_bytes_per_second_string(self.wps).into(),
+            ProcColumn::Name | ProcColumn::Command => {
+                self.id.to_prefixed_string().into()
+            }
+            ProcColumn::ReadPerSecond => {
+                dec_bytes_per_second_string(self.rps).into()
+            }
+            ProcColumn::WritePerSecond => {
+                dec_bytes_per_second_string(self.wps).into()
+            }
             ProcColumn::TotalRead => dec_bytes_string(self.total_read).into(),
             ProcColumn::TotalWrite => dec_bytes_string(self.total_write).into(),
             ProcColumn::State => {
@@ -371,15 +408,21 @@ impl DataToCell<ProcColumn> for ProcWidgetData {
                 self.gpu_mem_usage.to_string().into()
             }
             #[cfg(feature = "gpu")]
-            ProcColumn::GpuUtilPercent => format!("{:.1}%", self.gpu_usage).into(),
+            ProcColumn::GpuUtilPercent => {
+                format!("{:.1}%", self.gpu_usage).into()
+            }
         })
     }
 
     #[cfg(target_os = "linux")]
     #[inline(always)]
-    fn style_cell(&self, column: &ProcColumn, painter: &Painter) -> Option<tui::style::Style> {
+    fn style_cell(
+        &self, column: &ProcColumn, painter: &Painter,
+    ) -> Option<tui::style::Style> {
         match column {
-            ProcColumn::Name | ProcColumn::Command if self.process_type.is_thread() => {
+            ProcColumn::Name | ProcColumn::Command
+                if self.process_type.is_thread() =>
+            {
                 Some(painter.styles.thread_text_style)
             }
             _ => None,
@@ -395,7 +438,9 @@ impl DataToCell<ProcColumn> for ProcWidgetData {
         }
     }
 
-    fn column_widths<C: DataTableColumn<ProcColumn>>(data: &[Self], columns: &[C]) -> Vec<u16>
+    fn column_widths<C: DataTableColumn<ProcColumn>>(
+        data: &[Self], columns: &[C],
+    ) -> Vec<u16>
     where
         Self: Sized,
     {
@@ -434,7 +479,10 @@ mod test {
         assert_eq!(format_time(Duration::from_secs(3601)), "1h 0m 1s");
         assert_eq!(format_time(Duration::from_secs(3660)), "1h 1m 0s");
         assert_eq!(format_time(Duration::from_secs(3661)), "1h 1m 1s");
-        assert_eq!(format_time(Duration::from_secs(ONE_DAY - 1)), "23h 59m 59s");
+        assert_eq!(
+            format_time(Duration::from_secs(ONE_DAY - 1)),
+            "23h 59m 59s"
+        );
         assert_eq!(format_time(Duration::from_secs(ONE_DAY)), "1d 0h 0m");
         assert_eq!(format_time(Duration::from_secs(ONE_DAY + 1)), "1d 0h 0m");
         assert_eq!(format_time(Duration::from_secs(ONE_DAY + 60)), "1d 0h 1m");
@@ -442,7 +490,10 @@ mod test {
             format_time(Duration::from_secs(ONE_DAY + 3600 - 1)),
             "1d 0h 59m"
         );
-        assert_eq!(format_time(Duration::from_secs(ONE_DAY + 3600)), "1d 1h 0m");
+        assert_eq!(
+            format_time(Duration::from_secs(ONE_DAY + 3600)),
+            "1d 1h 0m"
+        );
         assert_eq!(
             format_time(Duration::from_secs(ONE_DAY * 365 - 1)),
             "364d 23h 59m"

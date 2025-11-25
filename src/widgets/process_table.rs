@@ -19,8 +19,9 @@ use crate::{
         data::{ProcessData, StoredData},
     },
     canvas::components::data_table::{
-        Column, ColumnHeader, ColumnWidthBounds, DataTable, DataTableColumn, DataTableProps,
-        DataTableStyling, SortColumn, SortDataTable, SortDataTableProps, SortOrder, SortsRow,
+        Column, ColumnHeader, ColumnWidthBounds, DataTable, DataTableColumn,
+        DataTableProps, DataTableStyling, SortColumn, SortDataTable,
+        SortDataTableProps, SortOrder, SortsRow,
     },
     collection::processes::{Pid, ProcessHarvest},
     options::config::style::Styles,
@@ -84,8 +85,12 @@ impl TreeCollapsed {
     /// Check whether the given PID is collapsed.
     pub(crate) fn is_collapsed(&self, pid: Pid) -> bool {
         match self {
-            TreeCollapsed::DefaultCollapse { expanded_pids } => !expanded_pids.contains(&pid),
-            TreeCollapsed::DefaultExpand { collapsed_pids } => collapsed_pids.contains(&pid),
+            TreeCollapsed::DefaultCollapse { expanded_pids } => {
+                !expanded_pids.contains(&pid)
+            }
+            TreeCollapsed::DefaultExpand { collapsed_pids } => {
+                collapsed_pids.contains(&pid)
+            }
         }
     }
 
@@ -157,8 +162,12 @@ fn make_column(column: ProcColumn) -> SortColumn<ProcColumn> {
         Count => SortColumn::new(Count),
         Name => SortColumn::soft(Name, Some(0.3)),
         Command => SortColumn::soft(Command, Some(0.3)),
-        ReadPerSecond => SortColumn::hard(ReadPerSecond, 8).default_descending(),
-        WritePerSecond => SortColumn::hard(WritePerSecond, 8).default_descending(),
+        ReadPerSecond => {
+            SortColumn::hard(ReadPerSecond, 8).default_descending()
+        }
+        WritePerSecond => {
+            SortColumn::hard(WritePerSecond, 8).default_descending()
+        }
         TotalRead => SortColumn::hard(TotalRead, 8).default_descending(),
         TotalWrite => SortColumn::hard(TotalWrite, 8).default_descending(),
         User => SortColumn::soft(User, Some(0.05)),
@@ -239,7 +248,8 @@ pub struct ProcWidgetState {
 
 impl ProcWidgetState {
     fn new_sort_table(config: &AppConfigFields, palette: &Styles) -> SortTable {
-        const COLUMNS: [Column<SortTableColumn>; 1] = [Column::hard(SortTableColumn, 7)];
+        const COLUMNS: [Column<SortTableColumn>; 1] =
+            [Column::hard(SortTableColumn, 7)];
 
         let props = DataTableProps {
             title: None,
@@ -255,8 +265,9 @@ impl ProcWidgetState {
     }
 
     fn new_process_table(
-        config: &AppConfigFields, colours: &Styles, columns: Vec<SortColumn<ProcColumn>>,
-        default_index: usize, default_order: SortOrder,
+        config: &AppConfigFields, colours: &Styles,
+        columns: Vec<SortColumn<ProcColumn>>, default_index: usize,
+        default_order: SortOrder,
     ) -> ProcessTable {
         let inner_props = DataTableProps {
             title: Some(" Processes ".into()),
@@ -277,8 +288,9 @@ impl ProcWidgetState {
     }
 
     pub(crate) fn new(
-        config: &AppConfigFields, mode: ProcWidgetMode, table_config: ProcTableConfig,
-        colours: &Styles, config_columns: &Option<IndexSet<ProcWidgetColumn>>,
+        config: &AppConfigFields, mode: ProcWidgetMode,
+        table_config: ProcTableConfig, colours: &Styles,
+        config_columns: &Option<IndexSet<ProcWidgetColumn>>,
     ) -> Self {
         let process_search_state = {
             let mut pss = ProcessSearchState::default();
@@ -317,11 +329,7 @@ impl ProcWidgetState {
                                 }
                             }
                             ProcWidgetColumn::ProcNameOrCommand => {
-                                if is_command {
-                                    Command
-                                } else {
-                                    Name
-                                }
+                                if is_command { Command } else { Name }
                             }
                             ProcWidgetColumn::Cpu => CpuPercent,
                             ProcWidgetColumn::Mem => {
@@ -402,12 +410,16 @@ impl ProcWidgetState {
 
         let (default_sort_index, default_sort_order) =
             if matches!(mode, ProcWidgetMode::Tree { .. }) {
-                if let Some(index) = column_mapping.get_index_of(&ProcWidgetColumn::PidOrCount) {
+                if let Some(index) =
+                    column_mapping.get_index_of(&ProcWidgetColumn::PidOrCount)
+                {
                     (index, columns[index].default_order)
                 } else {
                     (0, columns[0].default_order)
                 }
-            } else if let Some(index) = column_mapping.get_index_of(&ProcWidgetColumn::Cpu) {
+            } else if let Some(index) =
+                column_mapping.get_index_of(&ProcWidgetColumn::Cpu)
+            {
                 (index, columns[index].default_order)
             } else {
                 (0, columns[0].default_order)
@@ -482,7 +494,9 @@ impl ProcWidgetState {
             ProcWidgetMode::Grouped | ProcWidgetMode::Normal => {
                 self.get_normal_data(&stored_data.process_data.process_harvest)
             }
-            ProcWidgetMode::Tree(collapse) => self.get_tree_data(collapse, stored_data),
+            ProcWidgetMode::Tree(collapse) => {
+                self.get_tree_data(collapse, stored_data)
+            }
         };
         self.table.set_data(data);
         self.force_update_data = false;
@@ -566,14 +580,18 @@ impl ProcWidgetState {
             while let Some(process) = stack.last() {
                 let is_process_matching = kept_pids.contains(&process.pid);
 
-                if let Some(children_pids) = process_parent_mapping.get(&process.pid) {
+                if let Some(children_pids) =
+                    process_parent_mapping.get(&process.pid)
+                {
                     if children_pids
                         .iter()
                         .all(|pid| visited_pids.contains_key(pid))
                     {
                         let shown_children = children_pids
                             .iter()
-                            .filter(|pid| visited_pids.get(*pid).copied().unwrap_or(false))
+                            .filter(|pid| {
+                                visited_pids.get(*pid).copied().unwrap_or(false)
+                            })
                             .collect_vec();
 
                         // Show the entry if it is:
@@ -583,7 +601,11 @@ impl ProcWidgetState {
                         // - Is the child of a shown process.
                         let is_shown = is_process_matching
                             || !shown_children.is_empty()
-                            || is_ancestor_shown(process, &kept_pids, process_harvest);
+                            || is_ancestor_shown(
+                                process,
+                                &kept_pids,
+                                process_harvest,
+                            );
                         visited_pids.insert(process.pid, is_shown);
 
                         if is_shown {
@@ -592,7 +614,9 @@ impl ProcWidgetState {
                                 shown_children
                                     .into_iter()
                                     .filter_map(|pid| {
-                                        process_harvest.get(pid).map(|process| process.pid)
+                                        process_harvest
+                                            .get(pid)
+                                            .map(|process| process.pid)
                                     })
                                     .collect_vec(),
                             );
@@ -610,7 +634,11 @@ impl ProcWidgetState {
                     }
                 } else {
                     let is_shown = is_process_matching
-                        || is_ancestor_shown(process, &kept_pids, process_harvest);
+                        || is_ancestor_shown(
+                            process,
+                            &kept_pids,
+                            process_harvest,
+                        );
 
                     if is_shown {
                         filtered_tree.insert(process.pid, vec![]);
@@ -631,7 +659,11 @@ impl ProcWidgetState {
             .filter_map(|pid| {
                 if filtered_tree.contains_key(pid) {
                     process_harvest.get(pid).map(|process| {
-                        ProcWidgetData::from_data(process, is_using_command, is_mem_percent)
+                        ProcWidgetData::from_data(
+                            process,
+                            is_using_command,
+                            is_mem_percent,
+                        )
                     })
                 } else {
                     None
@@ -647,7 +679,9 @@ impl ProcWidgetState {
         let mut length_stack = vec![stack.len()];
         stack.reverse();
 
-        while let (Some(process), Some(siblings_left)) = (stack.pop(), length_stack.last_mut()) {
+        while let (Some(process), Some(siblings_left)) =
+            (stack.pop(), length_stack.last_mut())
+        {
             *siblings_left -= 1;
 
             let disabled = !kept_pids.contains(&process.pid);
@@ -662,7 +696,11 @@ impl ProcWidgetState {
                         .iter()
                         .filter_map(|child| {
                             process_harvest.get(child).map(|p| {
-                                ProcWidgetData::from_data(p, is_using_command, is_mem_percent)
+                                ProcWidgetData::from_data(
+                                    p,
+                                    is_using_command,
+                                    is_mem_percent,
+                                )
                             })
                         })
                         .collect_vec();
@@ -673,7 +711,11 @@ impl ProcWidgetState {
                         if let Some(pids) = filtered_tree.get(&process.pid) {
                             sum_queue.extend(pids.iter().filter_map(|child| {
                                 process_harvest.get(child).map(|p| {
-                                    ProcWidgetData::from_data(p, is_using_command, is_mem_percent)
+                                    ProcWidgetData::from_data(
+                                        p,
+                                        is_using_command,
+                                        is_mem_percent,
+                                    )
                                 })
                             }));
                         }
@@ -705,7 +747,9 @@ impl ProcWidgetState {
                     )
                 };
 
-                data.push(summed_process.prefix(Some(prefix)).disabled(disabled));
+                data.push(
+                    summed_process.prefix(Some(prefix)).disabled(disabled),
+                );
             } else {
                 let prefix = if prefixes.is_empty() {
                     String::default()
@@ -735,7 +779,11 @@ impl ProcWidgetState {
                         .iter()
                         .filter_map(|child_pid| {
                             process_harvest.get(child_pid).map(|p| {
-                                ProcWidgetData::from_data(p, is_using_command, is_mem_percent)
+                                ProcWidgetData::from_data(
+                                    p,
+                                    is_using_command,
+                                    is_mem_percent,
+                                )
                             })
                         })
                         .collect_vec();
@@ -780,73 +828,89 @@ impl ProcWidgetState {
         });
 
         let mut id_pid_map: HashMap<String, Vec<Pid>> = HashMap::default();
-        let mut filtered_data: Vec<ProcWidgetData> = if let ProcWidgetMode::Grouped = self.mode {
-            let mut id_process_mapping: HashMap<&String, ProcWidgetData> = HashMap::default();
+        let mut filtered_data: Vec<ProcWidgetData> =
+            if let ProcWidgetMode::Grouped = self.mode {
+                let mut id_process_mapping: HashMap<&String, ProcWidgetData> =
+                    HashMap::default();
 
-            for process in filtered_iter {
-                let id = if is_using_command {
-                    &process.command
-                } else {
-                    &process.name
-                };
-                let pid = process.pid;
+                for process in filtered_iter {
+                    let id = if is_using_command {
+                        &process.command
+                    } else {
+                        &process.name
+                    };
+                    let pid = process.pid;
 
-                if let Some(entry) = id_pid_map.get_mut(id) {
-                    entry.push(pid);
-                } else {
-                    id_pid_map.insert(id.clone(), vec![pid]);
-                }
-
-                if let Some(pwd) = id_process_mapping.get_mut(id) {
-                    pwd.cpu_usage_percent += process.cpu_usage_percent;
-
-                    match &mut pwd.mem_usage {
-                        MemUsage::Percent(usage) => {
-                            *usage += process.mem_usage_percent;
-                        }
-                        MemUsage::Bytes(usage) => {
-                            *usage += process.mem_usage;
-                        }
+                    if let Some(entry) = id_pid_map.get_mut(id) {
+                        entry.push(pid);
+                    } else {
+                        id_pid_map.insert(id.clone(), vec![pid]);
                     }
 
-                    pwd.rps += process.read_per_sec;
-                    pwd.wps += process.write_per_sec;
-                    pwd.total_read += process.total_read;
-                    pwd.total_write += process.total_write;
-                    pwd.time = pwd.time.max(process.time);
-                    #[cfg(feature = "gpu")]
-                    {
-                        pwd.gpu_usage += process.gpu_util;
-                        match &mut pwd.gpu_mem_usage {
+                    if let Some(pwd) = id_process_mapping.get_mut(id) {
+                        pwd.cpu_usage_percent += process.cpu_usage_percent;
+
+                        match &mut pwd.mem_usage {
                             MemUsage::Percent(usage) => {
-                                *usage += process.gpu_mem_percent;
+                                *usage += process.mem_usage_percent;
                             }
                             MemUsage::Bytes(usage) => {
-                                *usage += process.gpu_mem;
+                                *usage += process.mem_usage;
                             }
                         }
+
+                        pwd.rps += process.read_per_sec;
+                        pwd.wps += process.write_per_sec;
+                        pwd.total_read += process.total_read;
+                        pwd.total_write += process.total_write;
+                        pwd.time = pwd.time.max(process.time);
+                        #[cfg(feature = "gpu")]
+                        {
+                            pwd.gpu_usage += process.gpu_util;
+                            match &mut pwd.gpu_mem_usage {
+                                MemUsage::Percent(usage) => {
+                                    *usage += process.gpu_mem_percent;
+                                }
+                                MemUsage::Bytes(usage) => {
+                                    *usage += process.gpu_mem;
+                                }
+                            }
+                        }
+
+                        pwd.num_similar += 1;
+                    } else {
+                        id_process_mapping.insert(
+                            id,
+                            ProcWidgetData::from_data(
+                                process,
+                                is_using_command,
+                                is_mem_percent,
+                            ),
+                        );
                     }
-
-                    pwd.num_similar += 1;
-                } else {
-                    id_process_mapping.insert(
-                        id,
-                        ProcWidgetData::from_data(process, is_using_command, is_mem_percent),
-                    );
                 }
-            }
 
-            id_process_mapping.into_values().collect()
-        } else {
-            filtered_iter
-                .map(|process| ProcWidgetData::from_data(process, is_using_command, is_mem_percent))
-                .collect()
-        };
+                id_process_mapping.into_values().collect()
+            } else {
+                filtered_iter
+                    .map(|process| {
+                        ProcWidgetData::from_data(
+                            process,
+                            is_using_command,
+                            is_mem_percent,
+                        )
+                    })
+                    .collect()
+            };
 
         self.id_pid_map = id_pid_map;
 
         if let Some(column) = self.table.columns.get(self.table.sort_index()) {
-            sort_skip_pid_asc(column.inner(), &mut filtered_data, self.table.order());
+            sort_skip_pid_asc(
+                column.inner(),
+                &mut filtered_data,
+                self.table.order(),
+            );
         }
 
         filtered_data
@@ -858,7 +922,9 @@ impl ProcWidgetState {
     }
 
     pub fn toggle_mem_percentage(&mut self) {
-        if let Some(index) = self.column_mapping.get_index_of(&ProcWidgetColumn::Mem) {
+        if let Some(index) =
+            self.column_mapping.get_index_of(&ProcWidgetColumn::Mem)
+        {
             if let Some(mem) = self.get_mut_proc_col(index) {
                 match mem {
                     ProcColumn::MemValue => {
@@ -875,7 +941,9 @@ impl ProcWidgetState {
             }
         }
         #[cfg(feature = "gpu")]
-        if let Some(index) = self.column_mapping.get_index_of(&ProcWidgetColumn::GpuMem) {
+        if let Some(index) =
+            self.column_mapping.get_index_of(&ProcWidgetColumn::GpuMem)
+        {
             if let Some(mem) = self.get_mut_proc_col(index) {
                 match mem {
                     ProcColumn::GpuMemValue => {
@@ -982,16 +1050,23 @@ impl ProcWidgetState {
                 match inner {
                     ProcColumn::Name => {
                         *inner = ProcColumn::Command;
-                        if let ColumnWidthBounds::Soft { max_percentage, .. } = col.bounds_mut() {
+                        if let ColumnWidthBounds::Soft {
+                            max_percentage, ..
+                        } = col.bounds_mut()
+                        {
                             *max_percentage = Some(0.5);
                         }
                     }
                     ProcColumn::Command => {
                         *inner = ProcColumn::Name;
-                        if let ColumnWidthBounds::Soft { max_percentage, .. } = col.bounds_mut() {
+                        if let ColumnWidthBounds::Soft {
+                            max_percentage, ..
+                        } = col.bounds_mut()
+                        {
                             *max_percentage = match self.mode {
                                 ProcWidgetMode::Tree { .. } => Some(0.5),
-                                ProcWidgetMode::Grouped | ProcWidgetMode::Normal => Some(0.3),
+                                ProcWidgetMode::Grouped
+                                | ProcWidgetMode::Normal => Some(0.3),
                             };
                         }
                     }
@@ -1096,7 +1171,8 @@ impl ProcWidgetState {
                 Err(err) => {
                     self.proc_search.search_state.is_blank_search = false;
                     self.proc_search.search_state.is_invalid_search = true;
-                    self.proc_search.search_state.error_message = Some(err.to_string());
+                    self.proc_search.search_state.error_message =
+                        Some(err.to_string());
                 }
             }
         }
@@ -1134,9 +1210,12 @@ impl ProcWidgetState {
     #[cfg(test)]
     pub(crate) fn test_equality(&self, other: &Self) -> bool {
         self.mode == other.mode
-            && self.proc_search.is_ignoring_case == other.proc_search.is_ignoring_case
-            && self.proc_search.is_searching_whole_word == other.proc_search.is_searching_whole_word
-            && self.proc_search.is_searching_with_regex == other.proc_search.is_searching_with_regex
+            && self.proc_search.is_ignoring_case
+                == other.proc_search.is_ignoring_case
+            && self.proc_search.is_searching_whole_word
+                == other.proc_search.is_searching_whole_word
+            && self.proc_search.is_searching_with_regex
+                == other.proc_search.is_searching_with_regex
             && self
                 .table
                 .columns
@@ -1153,7 +1232,9 @@ impl ProcWidgetState {
 }
 
 #[inline]
-fn sort_skip_pid_asc(column: &ProcColumn, data: &mut [ProcWidgetData], order: SortOrder) {
+fn sort_skip_pid_asc(
+    column: &ProcColumn, data: &mut [ProcWidgetData], order: SortOrder,
+) {
     let descending = matches!(order, SortOrder::Descending);
     match column {
         ProcColumn::Pid if !descending => {}
@@ -1232,7 +1313,11 @@ mod test {
 
         // Assume we had sorted over by pid.
         data.sort_by_key(|p| p.pid);
-        sort_skip_pid_asc(&ProcColumn::CpuPercent, &mut data, SortOrder::Descending);
+        sort_skip_pid_asc(
+            &ProcColumn::CpuPercent,
+            &mut data,
+            SortOrder::Descending,
+        );
         assert_eq!(
             [&c, &b, &a, &d].iter().map(|d| d.pid).collect::<Vec<_>>(),
             data.iter().map(|d| d.pid).collect::<Vec<_>>(),
@@ -1240,14 +1325,22 @@ mod test {
 
         // Note that the PID ordering for ties is still ascending.
         data.sort_by_key(|p| p.pid);
-        sort_skip_pid_asc(&ProcColumn::CpuPercent, &mut data, SortOrder::Ascending);
+        sort_skip_pid_asc(
+            &ProcColumn::CpuPercent,
+            &mut data,
+            SortOrder::Ascending,
+        );
         assert_eq!(
             [&a, &d, &b, &c].iter().map(|d| d.pid).collect::<Vec<_>>(),
             data.iter().map(|d| d.pid).collect::<Vec<_>>(),
         );
 
         data.sort_by_key(|p| p.pid);
-        sort_skip_pid_asc(&ProcColumn::MemPercent, &mut data, SortOrder::Descending);
+        sort_skip_pid_asc(
+            &ProcColumn::MemPercent,
+            &mut data,
+            SortOrder::Descending,
+        );
         assert_eq!(
             [&b, &a, &c, &d].iter().map(|d| d.pid).collect::<Vec<_>>(),
             data.iter().map(|d| d.pid).collect::<Vec<_>>(),
@@ -1255,7 +1348,11 @@ mod test {
 
         // Note that the PID ordering for ties is still ascending.
         data.sort_by_key(|p| p.pid);
-        sort_skip_pid_asc(&ProcColumn::MemPercent, &mut data, SortOrder::Ascending);
+        sort_skip_pid_asc(
+            &ProcColumn::MemPercent,
+            &mut data,
+            SortOrder::Ascending,
+        );
         assert_eq!(
             [&c, &d, &a, &b].iter().map(|d| d.pid).collect::<Vec<_>>(),
             data.iter().map(|d| d.pid).collect::<Vec<_>>(),
@@ -1276,7 +1373,9 @@ mod test {
             .collect::<Vec<_>>()
     }
 
-    fn init_state(table_config: ProcTableConfig, columns: &[ProcWidgetColumn]) -> ProcWidgetState {
+    fn init_state(
+        table_config: ProcTableConfig, columns: &[ProcWidgetColumn],
+    ) -> ProcWidgetState {
         let config = AppConfigFields::default();
         let styling = Styles::default();
         let columns = Some(columns.iter().cloned().collect());
@@ -1326,7 +1425,8 @@ mod test {
             ProcColumn::MemPercent,
             ProcColumn::State,
         ];
-        let new_columns = vec![ProcColumn::Count, ProcColumn::Name, ProcColumn::MemPercent];
+        let new_columns =
+            vec![ProcColumn::Count, ProcColumn::Name, ProcColumn::MemPercent];
 
         let mut state = init_default_state(&init_columns);
         assert_eq!(get_columns(&state.table), original_columns);
@@ -1356,7 +1456,8 @@ mod test {
             ProcColumn::State,
             ProcColumn::Pid,
         ];
-        let new_columns = vec![ProcColumn::Name, ProcColumn::MemPercent, ProcColumn::Count];
+        let new_columns =
+            vec![ProcColumn::Name, ProcColumn::MemPercent, ProcColumn::Count];
 
         let mut state = init_default_state(&init_columns);
         assert_eq!(get_columns(&state.table), original_columns);
@@ -1588,7 +1689,8 @@ mod test {
             ProcColumn::MemPercent,
             ProcColumn::State,
         ];
-        let new_columns = vec![ProcColumn::Name, ProcColumn::Count, ProcColumn::MemPercent];
+        let new_columns =
+            vec![ProcColumn::Name, ProcColumn::Count, ProcColumn::MemPercent];
 
         let mut state = init_default_state(&init_columns);
         assert_eq!(get_columns(&state.table), original_columns);
@@ -1704,17 +1806,21 @@ mod test {
             ..Default::default()
         };
         // test get_normal_data default is filtered by toggle_k_thread
-        let mut normal_proc_harvest: BTreeMap<Pid, ProcessHarvest> = BTreeMap::new();
+        let mut normal_proc_harvest: BTreeMap<Pid, ProcessHarvest> =
+            BTreeMap::new();
         normal_proc_harvest.insert(1, process_harvest.clone());
         normal_proc_harvest.insert(2, k_process_harvest.clone());
-        let default_normal_results = state.get_normal_data(&normal_proc_harvest).len();
+        let default_normal_results =
+            state.get_normal_data(&normal_proc_harvest).len();
         assert!(default_normal_results == 2);
         state.toggle_k_thread();
-        let filtered_normal_results = state.get_normal_data(&normal_proc_harvest).len();
+        let filtered_normal_results =
+            state.get_normal_data(&normal_proc_harvest).len();
         assert!(filtered_normal_results == 1);
         // test that get_normal_data in grouped mode is still filtered
         state.mode = ProcWidgetMode::Grouped;
-        let filtered_grouped_results = state.get_normal_data(&normal_proc_harvest).len();
+        let filtered_grouped_results =
+            state.get_normal_data(&normal_proc_harvest).len();
         assert!(filtered_grouped_results == 1);
         // test that get_tree_data is filtered on toggle_k_thread
         let tree_collapsed = TreeCollapsed::new(false);

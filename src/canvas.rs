@@ -52,7 +52,9 @@ impl Painter {
     }
 
     /// Determines the border style.
-    pub fn get_border_style(&self, widget_id: u64, selected_widget_id: u64) -> tui::style::Style {
+    pub fn get_border_style(
+        &self, widget_id: u64, selected_widget_id: u64,
+    ) -> tui::style::Style {
         let is_on_widget = widget_id == selected_widget_id;
         if is_on_widget {
             self.styles.highlighted_border_style
@@ -80,7 +82,10 @@ impl Painter {
         use BottomWidgetType::*;
 
         terminal.draw(|f| {
-            let (terminal_size, frozen_draw_loc) = if app_state.data_store.is_frozen() {
+            let (terminal_size, frozen_draw_loc) = if app_state
+                .data_store
+                .is_frozen()
+            {
                 // TODO: Remove built-in cache?
                 let split_loc = Layout::default()
                     .constraints([Constraint::Min(0), Constraint::Length(1)])
@@ -113,7 +118,9 @@ impl Painter {
                 app_state.process_kill_dialog.handle_redraw();
 
                 // Reset battery dialog button locations...
-                for battery_widget in app_state.states.battery_state.widget_states.values_mut() {
+                for battery_widget in
+                    app_state.states.battery_state.widget_states.values_mut()
+                {
                     battery_widget.tab_click_locs = None;
                 }
             }
@@ -121,7 +128,8 @@ impl Painter {
             // TODO: Make drawing dialog generic.
             if app_state.help_dialog_state.is_showing_help {
                 let gen_help_len = GENERAL_HELP_TEXT.len() as u16 + 3;
-                let border_len = terminal_height.saturating_sub(gen_help_len) / 2;
+                let border_len =
+                    terminal_height.saturating_sub(gen_help_len) / 2;
                 let [_, vertical_dialog_chunk, _] = Layout::default()
                     .direction(Direction::Vertical)
                     .constraints([
@@ -162,7 +170,10 @@ impl Painter {
                         .areas(vertical_dialog_chunk)
                 } else {
                     // We calculate this so that the margins never have to split an odd number.
-                    let len = if (dialog_width.saturating_sub(MAX_TEXT_LENGTH)) % 2 == 0 {
+                    let len = if (dialog_width.saturating_sub(MAX_TEXT_LENGTH))
+                        % 2
+                        == 0
+                    {
                         MAX_TEXT_LENGTH
                     } else {
                         // It can only be 1 if the difference is greater than 1, so this is fine.
@@ -179,8 +190,10 @@ impl Painter {
                 self.draw_help_dialog(f, app_state, middle_dialog_chunk);
             } else if app_state.process_kill_dialog.is_open() {
                 // FIXME: For width, just limit to a max size or full width. For height, not sure. Maybe pass max and let child handle?
-                let horizontal_padding = if terminal_width < 100 { 0 } else { 5 };
-                let vertical_padding = if terminal_height < 100 { 0 } else { 5 };
+                let horizontal_padding =
+                    if terminal_width < 100 { 0 } else { 5 };
+                let vertical_padding =
+                    if terminal_height < 100 { 0 } else { 5 };
 
                 let vertical_dialog_chunk = Layout::default()
                     .direction(Direction::Vertical)
@@ -200,9 +213,11 @@ impl Painter {
                     ])
                     .areas::<3>(vertical_dialog_chunk)[1];
 
-                app_state
-                    .process_kill_dialog
-                    .draw(f, dialog_draw_area, &self.styles);
+                app_state.process_kill_dialog.draw(
+                    f,
+                    dialog_draw_area,
+                    &self.styles,
+                );
             } else if app_state.is_expanded {
                 if let Some(frozen_draw_loc) = frozen_draw_loc {
                     self.draw_frozen_indicator(f, frozen_draw_loc);
@@ -213,7 +228,12 @@ impl Painter {
                     .constraints([Constraint::Percentage(100)])
                     .split(terminal_size);
                 match &app_state.current_widget.widget_type {
-                    Cpu => self.draw_cpu(f, app_state, rect[0], app_state.current_widget.widget_id),
+                    Cpu => self.draw_cpu(
+                        f,
+                        app_state,
+                        rect[0],
+                        app_state.current_widget.widget_id,
+                    ),
                     CpuLegend => self.draw_cpu(
                         f,
                         app_state,
@@ -258,7 +278,12 @@ impl Painter {
                     Battery =>
                     {
                         #[cfg(feature = "battery")]
-                        self.draw_battery(f, app_state, rect[0], app_state.current_widget.widget_id)
+                        self.draw_battery(
+                            f,
+                            app_state,
+                            rect[0],
+                            app_state.current_widget.widget_id,
+                        )
                     }
                     _ => {}
                 }
@@ -279,8 +304,11 @@ impl Painter {
                         + u16::from(actual_cpu_data_len % 4 != 0)
                         + u16::from(
                             app_state.app_config_fields.show_average_cpu
-                                && app_state.app_config_fields.dedicated_average_row
-                                && actual_cpu_data_len.saturating_sub(1) % 4 != 0,
+                                && app_state
+                                    .app_config_fields
+                                    .dedicated_average_row
+                                && actual_cpu_data_len.saturating_sub(1) % 4
+                                    != 0,
                         );
 
                     if c <= 1 { 1 } else { c }
@@ -328,7 +356,10 @@ impl Painter {
 
                 let middle_chunks = Layout::default()
                     .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .constraints([
+                        Constraint::Percentage(50),
+                        Constraint::Percentage(50),
+                    ])
                     .split(vertical_chunks[1]);
 
                 if vertical_chunks[0].width >= 2 {
@@ -342,31 +373,53 @@ impl Painter {
                 }
 
                 let mut later_widget_id: Option<u64> = None;
-                if let Some(basic_table_widget_state) = &app_state.states.basic_table_widget_state {
-                    let widget_id = basic_table_widget_state.currently_displayed_widget_id;
+                if let Some(basic_table_widget_state) =
+                    &app_state.states.basic_table_widget_state
+                {
+                    let widget_id =
+                        basic_table_widget_state.currently_displayed_widget_id;
                     later_widget_id = Some(widget_id);
                     if vertical_chunks[3].width >= 2 {
-                        match basic_table_widget_state.currently_displayed_widget_type {
-                            Disk => {
-                                self.draw_disk_table(f, app_state, vertical_chunks[3], widget_id)
-                            }
+                        match basic_table_widget_state
+                            .currently_displayed_widget_type
+                        {
+                            Disk => self.draw_disk_table(
+                                f,
+                                app_state,
+                                vertical_chunks[3],
+                                widget_id,
+                            ),
                             Proc | ProcSort => {
                                 let wid = widget_id
-                                    - match basic_table_widget_state.currently_displayed_widget_type
+                                    - match basic_table_widget_state
+                                        .currently_displayed_widget_type
                                     {
                                         ProcSearch => 1,
                                         ProcSort => 2,
                                         _ => 0,
                                     };
-                                self.draw_process(f, app_state, vertical_chunks[3], wid);
+                                self.draw_process(
+                                    f,
+                                    app_state,
+                                    vertical_chunks[3],
+                                    wid,
+                                );
                             }
-                            Temp => {
-                                self.draw_temp_table(f, app_state, vertical_chunks[3], widget_id)
-                            }
+                            Temp => self.draw_temp_table(
+                                f,
+                                app_state,
+                                vertical_chunks[3],
+                                widget_id,
+                            ),
                             Battery =>
                             {
                                 #[cfg(feature = "battery")]
-                                self.draw_battery(f, app_state, vertical_chunks[3], widget_id)
+                                self.draw_battery(
+                                    f,
+                                    app_state,
+                                    vertical_chunks[3],
+                                    widget_id,
+                                )
                             }
                             _ => {}
                         }
@@ -374,7 +427,12 @@ impl Painter {
                 }
 
                 if let Some(widget_id) = later_widget_id {
-                    self.draw_basic_table_arrows(f, app_state, vertical_chunks[2], widget_id);
+                    self.draw_basic_table_arrows(
+                        f,
+                        app_state,
+                        vertical_chunks[2],
+                        widget_id,
+                    );
                 }
             } else {
                 // Draws using the passed in (or default) layout.
@@ -386,21 +444,30 @@ impl Painter {
                 // then pass each layout to the corresponding widget (second pass).
                 // Note that layouts are already cached in ratatui, so we don't need
                 // to do it manually!
-                let base = Layout::vertical(self.layout.rows.iter().map(|r| r.constraint))
-                    .split(terminal_size);
+                let base = Layout::vertical(
+                    self.layout.rows.iter().map(|r| r.constraint),
+                )
+                .split(terminal_size);
 
                 for (br, base) in self.layout.rows.iter().zip(base.iter()) {
-                    let base =
-                        Layout::horizontal(br.children.iter().map(|bc| bc.constraint)).split(*base);
+                    let base = Layout::horizontal(
+                        br.children.iter().map(|bc| bc.constraint),
+                    )
+                    .split(*base);
 
                     for (bc, base) in br.children.iter().zip(base.iter()) {
-                        let base = Layout::vertical(bc.children.iter().map(|bcr| bcr.constraint))
-                            .split(*base);
+                        let base = Layout::vertical(
+                            bc.children.iter().map(|bcr| bcr.constraint),
+                        )
+                        .split(*base);
 
-                        for (widgets, base) in bc.children.iter().zip(base.iter()) {
-                            let widget_draw_locs =
-                                Layout::horizontal(widgets.children.iter().map(|bw| bw.constraint))
-                                    .split(*base);
+                        for (widgets, base) in
+                            bc.children.iter().zip(base.iter())
+                        {
+                            let widget_draw_locs = Layout::horizontal(
+                                widgets.children.iter().map(|bw| bw.constraint),
+                            )
+                            .split(*base);
 
                             self.draw_widgets_with_constraints(
                                 f,
@@ -432,19 +499,52 @@ impl Painter {
         widget_draw_locs: &[Rect],
     ) {
         use BottomWidgetType::*;
-        for (widget, draw_loc) in widgets.children.iter().zip(widget_draw_locs) {
+        for (widget, draw_loc) in widgets.children.iter().zip(widget_draw_locs)
+        {
             if draw_loc.width >= 2 && draw_loc.height >= 2 {
                 match &widget.widget_type {
-                    Cpu => self.draw_cpu(f, app_state, *draw_loc, widget.widget_id),
-                    Mem => self.draw_memory_graph(f, app_state, *draw_loc, widget.widget_id),
-                    Net => self.draw_network(f, app_state, *draw_loc, widget.widget_id),
-                    Temp => self.draw_temp_table(f, app_state, *draw_loc, widget.widget_id),
-                    Disk => self.draw_disk_table(f, app_state, *draw_loc, widget.widget_id),
-                    Proc => self.draw_process(f, app_state, *draw_loc, widget.widget_id),
+                    Cpu => {
+                        self.draw_cpu(f, app_state, *draw_loc, widget.widget_id)
+                    }
+                    Mem => self.draw_memory_graph(
+                        f,
+                        app_state,
+                        *draw_loc,
+                        widget.widget_id,
+                    ),
+                    Net => self.draw_network(
+                        f,
+                        app_state,
+                        *draw_loc,
+                        widget.widget_id,
+                    ),
+                    Temp => self.draw_temp_table(
+                        f,
+                        app_state,
+                        *draw_loc,
+                        widget.widget_id,
+                    ),
+                    Disk => self.draw_disk_table(
+                        f,
+                        app_state,
+                        *draw_loc,
+                        widget.widget_id,
+                    ),
+                    Proc => self.draw_process(
+                        f,
+                        app_state,
+                        *draw_loc,
+                        widget.widget_id,
+                    ),
                     Battery =>
                     {
                         #[cfg(feature = "battery")]
-                        self.draw_battery(f, app_state, *draw_loc, widget.widget_id)
+                        self.draw_battery(
+                            f,
+                            app_state,
+                            *draw_loc,
+                            widget.widget_id,
+                        )
                     }
                     _ => {}
                 }

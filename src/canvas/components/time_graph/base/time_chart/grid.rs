@@ -110,7 +110,8 @@ impl Grid for BrailleGrid {
             if *curr_color != color {
                 *curr_color = color;
                 if let Some(cell) = self.utf16_code_points.get_mut(index) {
-                    *cell = symbols::braille::BLANK | symbols::braille::DOTS[y % 4][x % 2];
+                    *cell = symbols::braille::BLANK
+                        | symbols::braille::DOTS[y % 4][x % 2];
                 }
             } else if let Some(cell) = self.utf16_code_points.get_mut(index) {
                 *cell |= symbols::braille::DOTS[y % 4][x % 2];
@@ -212,7 +213,10 @@ impl HalfBlockGrid {
         Self {
             width,
             height,
-            pixels: vec![vec![Color::Reset; width as usize]; height as usize * 2],
+            pixels: vec![
+                vec![Color::Reset; width as usize];
+                height as usize * 2
+            ],
         }
     }
 }
@@ -274,7 +278,9 @@ impl Grid for HalfBlockGrid {
         let colors = vertical_color_pairs
             .map(|(upper, lower)| {
                 let (fg, bg) = match (upper, lower) {
-                    (Color::Reset, Color::Reset) => (Color::Reset, Color::Reset),
+                    (Color::Reset, Color::Reset) => {
+                        (Color::Reset, Color::Reset)
+                    }
                     (Color::Reset, &lower) => (lower, Color::Reset),
                     (&upper, Color::Reset) => (upper, Color::Reset),
                     (&upper, &lower) => (upper, lower),

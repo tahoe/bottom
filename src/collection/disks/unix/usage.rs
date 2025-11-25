@@ -23,7 +23,8 @@ impl Usage {
     /// Returns the total number of bytes used. Equal to `total - available` on
     /// Unix.
     pub fn used(&self) -> u64 {
-        let avail_to_root = u64::from(self.0.f_bfree) * u64::from(self.0.f_frsize);
+        let avail_to_root =
+            u64::from(self.0.f_bfree) * u64::from(self.0.f_frsize);
         self.total() - avail_to_root
     }
 

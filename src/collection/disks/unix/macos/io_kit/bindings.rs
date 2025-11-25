@@ -37,7 +37,8 @@ pub const kIOMediaClass: &str = "IOMedia\0";
 unsafe extern "C" {
 
     pub fn IOServiceGetMatchingServices(
-        mainPort: mach_port_t, matching: CFMutableDictionaryRef, existing: *mut io_iterator_t,
+        mainPort: mach_port_t, matching: CFMutableDictionaryRef,
+        existing: *mut io_iterator_t,
     ) -> kern_return_t;
 
     pub fn IOServiceMatching(name: *const c_char) -> CFMutableDictionaryRef;
@@ -47,7 +48,8 @@ unsafe extern "C" {
     pub fn IOObjectRelease(obj: io_object_t) -> kern_return_t;
 
     pub fn IORegistryEntryGetParentEntry(
-        entry: io_registry_entry_t, plane: *const libc::c_char, parent: *mut io_registry_entry_t,
+        entry: io_registry_entry_t, plane: *const libc::c_char,
+        parent: *mut io_registry_entry_t,
     ) -> kern_return_t;
 
     // pub fn IOObjectConformsTo(object: io_object_t, className: *const

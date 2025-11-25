@@ -1,6 +1,8 @@
 use std::{borrow::Cow, num::NonZeroU16};
 
-use crate::canvas::components::data_table::{ColumnHeader, DataTableColumn, DataToCell};
+use crate::canvas::components::data_table::{
+    ColumnHeader, DataTableColumn, DataToCell,
+};
 
 pub struct SortTableColumn;
 
@@ -17,7 +19,9 @@ impl DataToCell<SortTableColumn> for &'static str {
         Some(Cow::Borrowed(self))
     }
 
-    fn column_widths<C: DataTableColumn<SortTableColumn>>(data: &[Self], _columns: &[C]) -> Vec<u16>
+    fn column_widths<C: DataTableColumn<SortTableColumn>>(
+        data: &[Self], _columns: &[C],
+    ) -> Vec<u16>
     where
         Self: Sized,
     {
@@ -32,7 +36,9 @@ impl DataToCell<SortTableColumn> for Cow<'static, str> {
         Some(self.clone())
     }
 
-    fn column_widths<C: DataTableColumn<SortTableColumn>>(data: &[Self], _columns: &[C]) -> Vec<u16>
+    fn column_widths<C: DataTableColumn<SortTableColumn>>(
+        data: &[Self], _columns: &[C],
+    ) -> Vec<u16>
     where
         Self: Sized,
     {

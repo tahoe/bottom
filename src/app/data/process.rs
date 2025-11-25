@@ -23,7 +23,9 @@ impl ProcessData {
         // Reverse as otherwise the pid mappings are in the wrong order.
         list_of_processes.iter().rev().for_each(|process_harvest| {
             if let Some(parent_pid) = process_harvest.parent_pid {
-                if let Some(entry) = self.process_parent_mapping.get_mut(&parent_pid) {
+                if let Some(entry) =
+                    self.process_parent_mapping.get_mut(&parent_pid)
+                {
                     entry.push(process_harvest.pid);
                 } else {
                     self.process_parent_mapping
@@ -46,9 +48,15 @@ impl ProcessData {
         self.orphan_pids = self
             .process_harvest
             .iter()
-            .filter_map(|(pid, process_harvest)| match process_harvest.parent_pid {
-                Some(parent_pid) if self.process_harvest.contains_key(&parent_pid) => None,
-                _ => Some(*pid),
+            .filter_map(|(pid, process_harvest)| {
+                match process_harvest.parent_pid {
+                    Some(parent_pid)
+                        if self.process_harvest.contains_key(&parent_pid) =>
+                    {
+                        None
+                    }
+                    _ => Some(*pid),
+                }
             })
             .collect();
     }

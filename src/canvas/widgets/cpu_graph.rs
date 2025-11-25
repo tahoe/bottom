@@ -21,7 +21,10 @@ const AVG_POSITION: usize = 1;
 const ALL_POSITION: usize = 0;
 
 impl Painter {
-    pub fn draw_cpu(&self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64) {
+    pub fn draw_cpu(
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
+    ) {
         let legend_width = (draw_loc.width as f64 * 0.15) as u16;
 
         if legend_width < 6 {
@@ -42,10 +45,15 @@ impl Painter {
 
             // Update draw loc in widget map
             if app_state.should_get_widget_bounds() {
-                if let Some(bottom_widget) = app_state.widget_map.get_mut(&widget_id) {
-                    bottom_widget.top_left_corner = Some((draw_loc.x, draw_loc.y));
-                    bottom_widget.bottom_right_corner =
-                        Some((draw_loc.x + draw_loc.width, draw_loc.y + draw_loc.height));
+                if let Some(bottom_widget) =
+                    app_state.widget_map.get_mut(&widget_id)
+                {
+                    bottom_widget.top_left_corner =
+                        Some((draw_loc.x, draw_loc.y));
+                    bottom_widget.bottom_right_corner = Some((
+                        draw_loc.x + draw_loc.width,
+                        draw_loc.y + draw_loc.height,
+                    ));
                 }
             }
         } else {
@@ -77,7 +85,12 @@ impl Painter {
                 .constraints(constraints)
                 .split(draw_loc);
 
-            self.draw_cpu_graph(f, app_state, partitioned_draw_loc[graph_index], widget_id);
+            self.draw_cpu_graph(
+                f,
+                app_state,
+                partitioned_draw_loc[graph_index],
+                widget_id,
+            );
             self.draw_cpu_legend(
                 f,
                 app_state,
@@ -87,7 +100,9 @@ impl Painter {
 
             if app_state.should_get_widget_bounds() {
                 // Update draw loc in widget map
-                if let Some(cpu_widget) = app_state.widget_map.get_mut(&widget_id) {
+                if let Some(cpu_widget) =
+                    app_state.widget_map.get_mut(&widget_id)
+                {
                     cpu_widget.top_left_corner = Some((
                         partitioned_draw_loc[graph_index].x,
                         partitioned_draw_loc[graph_index].y,
@@ -100,7 +115,9 @@ impl Painter {
                     ));
                 }
 
-                if let Some(legend_widget) = app_state.widget_map.get_mut(&(widget_id + 1)) {
+                if let Some(legend_widget) =
+                    app_state.widget_map.get_mut(&(widget_id + 1))
+                {
                     legend_widget.top_left_corner = Some((
                         partitioned_draw_loc[legend_index].x,
                         partitioned_draw_loc[legend_index].y,
@@ -117,10 +134,12 @@ impl Painter {
     }
 
     fn generate_points<'a>(
-        &self, cpu_widget_state: &'a CpuWidgetState, data: &'a StoredData, show_avg_cpu: bool,
+        &self, cpu_widget_state: &'a CpuWidgetState, data: &'a StoredData,
+        show_avg_cpu: bool,
     ) -> Vec<GraphData<'a>> {
         let show_avg_offset = if show_avg_cpu { AVG_POSITION } else { 0 };
-        let current_scroll_position = cpu_widget_state.table.state.current_index;
+        let current_scroll_position =
+            cpu_widget_state.table.state.current_index;
         let cpu_entries = &data.cpu_harvest;
         let cpu_points = &data.timeseries_data.cpu;
         let time = &data.timeseries_data.time;
@@ -135,25 +154,29 @@ impl Painter {
                     let style = if show_avg_cpu && itx == 0 {
                         self.styles.avg_cpu_colour
                     } else {
-                        self.styles.cpu_colour_styles
-                            [(itx - show_avg_offset) % self.styles.cpu_colour_styles.len()]
+                        self.styles.cpu_colour_styles[(itx - show_avg_offset)
+                            % self.styles.cpu_colour_styles.len()]
                     };
 
                     GraphData::default().style(style).time(time).values(values)
                 })
                 .rev()
                 .collect()
-        } else if let Some(CpuData { .. }) = cpu_entries.get(current_scroll_position - 1) {
+        } else if let Some(CpuData { .. }) =
+            cpu_entries.get(current_scroll_position - 1)
+        {
             // We generally subtract one from current scroll position because of the all entry.
             // TODO: Do this a bit better (e.g. we can just do if let Some(_) = cpu_points.get())
 
-            let style = if show_avg_cpu && current_scroll_position == AVG_POSITION {
-                self.styles.avg_cpu_colour
-            } else {
-                let offset_position = current_scroll_position - 1;
-                self.styles.cpu_colour_styles
-                    [(offset_position - show_avg_offset) % self.styles.cpu_colour_styles.len()]
-            };
+            let style =
+                if show_avg_cpu && current_scroll_position == AVG_POSITION {
+                    self.styles.avg_cpu_colour
+                } else {
+                    let offset_position = current_scroll_position - 1;
+                    self.styles.cpu_colour_styles[(offset_position
+                        - show_avg_offset)
+                        % self.styles.cpu_colour_styles.len()]
+                };
 
             vec![
                 GraphData::default()
@@ -167,9 +190,11 @@ impl Painter {
     }
 
     fn draw_cpu_graph(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
-        if let Some(cpu_widget_state) = app_state.states.cpu_state.widget_states.get_mut(&widget_id)
+        if let Some(cpu_widget_state) =
+            app_state.states.cpu_state.widget_states.get_mut(&widget_id)
         {
             let data = app_state.data_store.get_data();
 
@@ -222,7 +247,8 @@ impl Painter {
     }
 
     fn draw_cpu_legend(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
         let recalculate_column_widths = app_state.should_get_widget_bounds();
         if let Some(cpu_widget_state) = app_state
@@ -241,7 +267,10 @@ impl Painter {
                 loc: draw_loc,
                 force_redraw: app_state.is_force_redraw,
                 recalculate_column_widths,
-                selection_state: SelectionState::new(app_state.is_expanded, is_on_widget),
+                selection_state: SelectionState::new(
+                    app_state.is_expanded,
+                    is_on_widget,
+                ),
             };
 
             cpu_widget_state.table.draw(

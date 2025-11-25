@@ -46,6 +46,7 @@ mod test {
     #[test]
     fn bad_disk_column_settings() {
         let config = r#"columns = ["diskk"]"#;
-        toml_edit::de::from_str::<DiskConfig>(config).expect_err("Should error out!");
+        toml_edit::de::from_str::<DiskConfig>(config)
+            .expect_err("Should error out!");
     }
 }

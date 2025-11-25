@@ -5,8 +5,8 @@ use itertools::Itertools;
 use tui::widgets::Row;
 
 use super::{
-    ColumnHeader, ColumnWidthBounds, DataTable, DataTableColumn, DataTableProps, DataTableState,
-    DataTableStyling, DataToCell,
+    ColumnHeader, ColumnWidthBounds, DataTable, DataTableColumn,
+    DataTableProps, DataTableState, DataTableStyling, DataToCell,
 };
 use crate::utils::strings::truncate_to_text;
 
@@ -58,7 +58,9 @@ pub struct Sortable {
 /// and therefore only [`Unsortable`] and [`Sortable`] can implement it.
 pub trait SortType: private::Sealed {
     /// Constructs the table header.
-    fn build_header<H, C>(&self, columns: &[C], widths: &[NonZeroU16]) -> Row<'_>
+    fn build_header<H, C>(
+        &self, columns: &[C], widths: &[NonZeroU16],
+    ) -> Row<'_>
     where
         H: ColumnHeader,
         C: DataTableColumn<H>,
@@ -84,7 +86,9 @@ mod private {
 impl SortType for Unsortable {}
 
 impl SortType for Sortable {
-    fn build_header<H, C>(&self, columns: &[C], widths: &[NonZeroU16]) -> Row<'_>
+    fn build_header<H, C>(
+        &self, columns: &[C], widths: &[NonZeroU16],
+    ) -> Row<'_>
     where
         H: ColumnHeader,
         C: DataTableColumn<H>,
@@ -92,27 +96,26 @@ impl SortType for Sortable {
         const UP_ARROW: &str = "▲";
         const DOWN_ARROW: &str = "▼";
 
-        Row::new(
-            columns
-                .iter()
-                .zip(widths)
-                .enumerate()
-                .map(|(index, (c, &width))| {
-                    if index == self.sort_index {
-                        let arrow = match self.order {
-                            SortOrder::Ascending => UP_ARROW,
-                            SortOrder::Descending => DOWN_ARROW,
-                        };
-                        // TODO: I think I can get away with removing the truncate_to_text call
-                        // since I almost always bind to at least the header
-                        // size... TODO: Or should we instead truncate but
-                        // ALWAYS leave the arrow at the end?
-                        truncate_to_text(&concat_string!(c.header(), arrow), width.get())
-                    } else {
-                        truncate_to_text(&c.header(), width.get())
-                    }
-                }),
-        )
+        Row::new(columns.iter().zip(widths).enumerate().map(
+            |(index, (c, &width))| {
+                if index == self.sort_index {
+                    let arrow = match self.order {
+                        SortOrder::Ascending => UP_ARROW,
+                        SortOrder::Descending => DOWN_ARROW,
+                    };
+                    // TODO: I think I can get away with removing the truncate_to_text call
+                    // since I almost always bind to at least the header
+                    // size... TODO: Or should we instead truncate but
+                    // ALWAYS leave the arrow at the end?
+                    truncate_to_text(
+                        &concat_string!(c.header(), arrow),
+                        width.get(),
+                    )
+                } else {
+                    truncate_to_text(&c.header(), width.get())
+                }
+            },
+        ))
     }
 }
 
@@ -239,7 +242,8 @@ pub struct SortDataTableProps {
 }
 
 /// A type alias for a sortable [`DataTable`].
-pub type SortDataTable<DataType, H> = DataTable<DataType, H, Sortable, SortColumn<H>>;
+pub type SortDataTable<DataType, H> =
+    DataTable<DataType, H, Sortable, SortColumn<H>>;
 
 impl<D, H> SortDataTable<D, H>
 where
@@ -366,7 +370,9 @@ mod test {
             None
         }
 
-        fn column_widths<C: DataTableColumn<ColumnType>>(_data: &[Self], _columns: &[C]) -> Vec<u16>
+        fn column_widths<C: DataTableColumn<ColumnType>>(
+            _data: &[Self], _columns: &[C],
+        ) -> Vec<u16>
         where
             Self: Sized,
         {

@@ -151,8 +151,8 @@ pub enum LegendPosition {
 
 impl LegendPosition {
     fn layout(
-        &self, area: Rect, legend_width: u16, legend_height: u16, x_title_width: u16,
-        y_title_width: u16,
+        &self, area: Rect, legend_width: u16, legend_height: u16,
+        x_title_width: u16, y_title_width: u16,
     ) -> Option<Rect> {
         let mut height_margin = (area.height - legend_height) as i32;
         if x_title_width != 0 {
@@ -310,7 +310,9 @@ impl<'a> Dataset<'a> {
     /// element being X and the second Y. It's also worth noting that,
     /// unlike the [`Rect`], here the Y axis is bottom to top, as in math.
     #[must_use = "method moves the value of self and returns the modified value"]
-    pub fn data(mut self, times: &'a [Instant], values: &'a Values) -> Dataset<'a> {
+    pub fn data(
+        mut self, times: &'a [Instant], values: &'a Values,
+    ) -> Dataset<'a> {
         self.data = Data::Some { times, values };
         self
     }
@@ -447,7 +449,10 @@ impl<'a> TimeChart<'a> {
             style: Style::default(),
             legend_style: Style::default(),
             datasets,
-            hidden_legend_constraints: (Constraint::Ratio(1, 4), Constraint::Ratio(1, 4)),
+            hidden_legend_constraints: (
+                Constraint::Ratio(1, 4),
+                Constraint::Ratio(1, 4),
+            ),
             legend_position: Some(LegendPosition::default()),
             marker: Marker::Braille,
             scaling: ChartScaling::default(),
@@ -537,7 +542,9 @@ impl<'a> TimeChart<'a> {
     ///
     /// [`hidden_legend_constraints`]: Self::hidden_legend_constraints
     #[must_use = "method moves the value of self and returns the modified value"]
-    pub fn legend_position(mut self, position: Option<LegendPosition>) -> TimeChart<'a> {
+    pub fn legend_position(
+        mut self, position: Option<LegendPosition>,
+    ) -> TimeChart<'a> {
         self.legend_position = position;
         self
     }
@@ -565,7 +572,10 @@ impl<'a> TimeChart<'a> {
         }
 
         layout.label_y = self.y_axis.labels.as_ref().and(Some(x));
-        x += self.max_width_of_labels_left_of_y_axis(area, self.y_axis.labels.is_some());
+        x += self.max_width_of_labels_left_of_y_axis(
+            area,
+            self.y_axis.labels.is_some(),
+        );
 
         if self.x_axis.labels.is_some() && y > area.top() {
             layout.axis_x = Some(y);
@@ -578,7 +588,8 @@ impl<'a> TimeChart<'a> {
         }
 
         if x < area.right() && y > 1 {
-            layout.graph_area = Rect::new(x, area.top(), area.right() - x, y - area.top() + 1);
+            layout.graph_area =
+                Rect::new(x, area.top(), area.right() - x, y - area.top() + 1);
         }
 
         if let Some(ref title) = self.x_axis.title {
@@ -605,13 +616,15 @@ impl<'a> TimeChart<'a> {
                 let legend_width = inner_width + 2;
                 let legend_height = legends.count() as u16 + 2;
 
-                let [max_legend_width] = Layout::horizontal([self.hidden_legend_constraints.0])
-                    .flex(Flex::Start)
-                    .areas(layout.graph_area);
+                let [max_legend_width] =
+                    Layout::horizontal([self.hidden_legend_constraints.0])
+                        .flex(Flex::Start)
+                        .areas(layout.graph_area);
 
-                let [max_legend_height] = Layout::vertical([self.hidden_legend_constraints.1])
-                    .flex(Flex::Start)
-                    .areas(layout.graph_area);
+                let [max_legend_height] =
+                    Layout::vertical([self.hidden_legend_constraints.1])
+                        .flex(Flex::Start)
+                        .areas(layout.graph_area);
 
                 if inner_width > 0
                     && legend_width <= max_legend_width.width
@@ -638,7 +651,9 @@ impl<'a> TimeChart<'a> {
         layout
     }
 
-    fn max_width_of_labels_left_of_y_axis(&self, area: Rect, has_y_axis: bool) -> u16 {
+    fn max_width_of_labels_left_of_y_axis(
+        &self, area: Rect, has_y_axis: bool,
+    ) -> u16 {
         let mut max_width = self
             .y_axis
             .labels
@@ -671,7 +686,8 @@ impl<'a> TimeChart<'a> {
     }
 
     fn render_x_labels(
-        &self, buf: &mut Buffer, layout: &ChartLayout, chart_area: Rect, graph_area: Rect,
+        &self, buf: &mut Buffer, layout: &ChartLayout, chart_area: Rect,
+        graph_area: Rect,
     ) {
         let Some(y) = layout.label_x else { return };
         let labels = self.x_axis.labels.as_ref().unwrap();
@@ -696,13 +712,20 @@ impl<'a> TimeChart<'a> {
             Alignment::Right => Alignment::Left,
         };
 
-        Self::render_label(buf, labels.first().unwrap(), label_area, label_alignment);
+        Self::render_label(
+            buf,
+            labels.first().unwrap(),
+            label_area,
+            label_alignment,
+        );
 
         for (i, label) in labels[1..labels.len() - 1].iter().enumerate() {
             // We add 1 to x (and width-1 below) to leave at least one space before each
             // intermediate labels
-            let x = graph_area.left() + (i + 1) as u16 * width_between_ticks + 1;
-            let label_area = Rect::new(x, y, width_between_ticks.saturating_sub(1), 1);
+            let x =
+                graph_area.left() + (i + 1) as u16 * width_between_ticks + 1;
+            let label_area =
+                Rect::new(x, y, width_between_ticks.saturating_sub(1), 1);
 
             Self::render_label(buf, label, label_area, Alignment::Center);
         }
@@ -710,12 +733,17 @@ impl<'a> TimeChart<'a> {
         let x = graph_area.right() - width_between_ticks;
         let label_area = Rect::new(x, y, width_between_ticks, 1);
         // The last label should be aligned Right to be at the edge of the graph area
-        Self::render_label(buf, labels.last().unwrap(), label_area, Alignment::Right);
+        Self::render_label(
+            buf,
+            labels.last().unwrap(),
+            label_area,
+            Alignment::Right,
+        );
     }
 
     fn first_x_label_area(
-        &self, y: u16, label_width: u16, max_width_after_y_axis: u16, chart_area: Rect,
-        graph_area: Rect,
+        &self, y: u16, label_width: u16, max_width_after_y_axis: u16,
+        chart_area: Rect, graph_area: Rect,
     ) -> Rect {
         let (min_x, max_x) = match self.x_axis.labels_alignment {
             Alignment::Left => (chart_area.left(), graph_area.left()),
@@ -732,13 +760,19 @@ impl<'a> TimeChart<'a> {
         Rect::new(min_x, y, max_x - min_x, 1)
     }
 
-    fn render_label(buf: &mut Buffer, label: &Span<'_>, label_area: Rect, alignment: Alignment) {
+    fn render_label(
+        buf: &mut Buffer, label: &Span<'_>, label_area: Rect,
+        alignment: Alignment,
+    ) {
         let label_width = label.width() as u16;
         let bounded_label_width = label_area.width.min(label_width);
 
         let x = match alignment {
             Alignment::Left => label_area.left(),
-            Alignment::Center => label_area.left() + label_area.width / 2 - bounded_label_width / 2,
+            Alignment::Center => {
+                label_area.left() + label_area.width / 2
+                    - bounded_label_width / 2
+            }
             Alignment::Right => label_area.right() - bounded_label_width,
         };
 
@@ -746,7 +780,8 @@ impl<'a> TimeChart<'a> {
     }
 
     fn render_y_labels(
-        &self, buf: &mut Buffer, layout: &ChartLayout, chart_area: Rect, graph_area: Rect,
+        &self, buf: &mut Buffer, layout: &ChartLayout, chart_area: Rect,
+        graph_area: Rect,
     ) {
         // FIXME: Control how many y-axis labels are rendered based on height.
 
@@ -762,7 +797,12 @@ impl<'a> TimeChart<'a> {
                     (graph_area.left() - chart_area.left()).saturating_sub(1),
                     1,
                 );
-                Self::render_label(buf, label, label_area, self.y_axis.labels_alignment);
+                Self::render_label(
+                    buf,
+                    label,
+                    label_area,
+                    self.y_axis.labels_alignment,
+                );
             }
         }
     }
@@ -781,7 +821,8 @@ impl Widget for TimeChart<'_> {
         // Sample the style of the entire widget. This sample will be used to reset the
         // style of the cells that are part of the components put on top of the
         // graph area (i.e legend and axis names).
-        let Some(original_style) = buf.cell((area.left(), area.top())).map(|cell| cell.style())
+        let Some(original_style) =
+            buf.cell((area.left(), area.top())).map(|cell| cell.style())
         else {
             return;
         };
@@ -1021,12 +1062,18 @@ mod tests {
         let cases = [
             LegendTestCase {
                 chart_area: Rect::new(0, 0, 100, 100),
-                hidden_legend_constraints: (Constraint::Ratio(1, 4), Constraint::Ratio(1, 4)),
+                hidden_legend_constraints: (
+                    Constraint::Ratio(1, 4),
+                    Constraint::Ratio(1, 4),
+                ),
                 legend_area: Some(Rect::new(88, 0, 12, 12)),
             },
             LegendTestCase {
                 chart_area: Rect::new(0, 0, 100, 100),
-                hidden_legend_constraints: (Constraint::Ratio(1, 10), Constraint::Ratio(1, 4)),
+                hidden_legend_constraints: (
+                    Constraint::Ratio(1, 10),
+                    Constraint::Ratio(1, 4),
+                ),
                 legend_area: None,
             },
         ];
@@ -1116,7 +1163,8 @@ mod tests {
         let data_named_1 = Dataset::default().name("data1"); // must occupy a row in legend
         let data_named_2 = Dataset::default().name(""); // must occupy a row in legend, even if name is empty
         let data_unnamed = Dataset::default(); // must not occupy a row in legend
-        let widget = TimeChart::new(vec![data_named_1, data_unnamed, data_named_2]);
+        let widget =
+            TimeChart::new(vec![data_named_1, data_unnamed, data_named_2]);
         let buffer = Buffer::empty(Rect::new(0, 0, 50, 25));
         let layout = widget.layout(buffer.area);
 
@@ -1138,8 +1186,8 @@ mod tests {
     #[test]
     fn dataset_legend_style_is_patched() {
         let long_dataset_name = Dataset::default().name("Very long name");
-        let short_dataset =
-            Dataset::default().name(Line::from("Short name").alignment(Alignment::Right));
+        let short_dataset = Dataset::default()
+            .name(Line::from("Short name").alignment(Alignment::Right));
         let widget = TimeChart::new(vec![long_dataset_name, short_dataset])
             .hidden_legend_constraints((100.into(), 100.into()));
         let mut buffer = Buffer::empty(Rect::new(0, 0, 20, 5));
@@ -1258,7 +1306,10 @@ mod tests {
     fn test_legend_area_can_fit_same_chart_area() {
         let name = "Data";
         let chart = TimeChart::new(vec![Dataset::default().name(name)])
-            .hidden_legend_constraints((Constraint::Percentage(100), Constraint::Percentage(100)));
+            .hidden_legend_constraints((
+                Constraint::Percentage(100),
+                Constraint::Percentage(100),
+            ));
 
         let area = Rect::new(0, 0, name.len() as u16 + 2, 3);
         let mut buffer = Buffer::empty(area);
@@ -1288,7 +1339,10 @@ mod tests {
     fn test_legend_of_chart_have_odd_margin_size() {
         let name = "Data";
         let base_chart = TimeChart::new(vec![Dataset::default().name(name)])
-            .hidden_legend_constraints((Constraint::Percentage(100), Constraint::Percentage(100)));
+            .hidden_legend_constraints((
+                Constraint::Percentage(100),
+                Constraint::Percentage(100),
+            ));
 
         let area = Rect::new(0, 0, name.len() as u16 + 2 + 3, 3 + 3);
         let mut buffer = Buffer::empty(area);
