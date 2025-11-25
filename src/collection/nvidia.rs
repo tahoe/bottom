@@ -2,7 +2,8 @@ use std::{num::NonZeroU64, sync::OnceLock};
 
 use hashbrown::HashMap;
 use nvml_wrapper::{
-    Nvml, enum_wrappers::device::TemperatureSensor, enums::device::UsedGpuMemory, error::NvmlError,
+    Nvml, enum_wrappers::device::TemperatureSensor,
+    enums::device::UsedGpuMemory, error::NvmlError,
 };
 
 use crate::{
@@ -12,10 +13,18 @@ use crate::{
 
 pub static NVML_DATA: OnceLock<Result<Nvml, NvmlError>> = OnceLock::new();
 
+#[derive(Debug, Clone)]
+pub struct GpuStats {
+    pub gpu_util: u32,
+    pub enc_util: u32,
+    pub dec_util: u32,
+}
+
 pub struct GpusData {
     pub memory: Option<Vec<(String, MemData)>>,
     pub temperature: Option<Vec<TempSensorData>>,
     pub procs: Option<(u64, Vec<HashMap<u32, (u64, u32)>>)>,
+    pub gpu_stats: Option<Vec<(String, GpuStats)>>,
 }
 
 /// Wrapper around Nvml::init
@@ -50,15 +59,42 @@ pub fn get_nvidia_vecs(
         if let Ok(num_gpu) = nvml.device_count() {
             let mut temp_vec = Vec::with_capacity(num_gpu as usize);
             let mut mem_vec = Vec::with_capacity(num_gpu as usize);
+            let mut gpu_vec = Vec::with_capacity(num_gpu as usize);
             let mut proc_vec = Vec::with_capacity(num_gpu as usize);
             let mut total_mem = 0;
 
+            // TODO for Dennis
+            // GETs GPU info, right now only mem/temp and proc info
+            // I have the extra data here but it's not displayable yet.
             for i in 0..num_gpu {
                 if let Ok(device) = nvml.device_by_index(i) {
                     if let Ok(name) = device.name() {
                         if widgets_to_harvest.use_mem {
+                            if let Ok(gpu_usage) = device.utilization_rates() {
+                                let gpu_util = gpu_usage.gpu;
+                                if let Ok(enc_usage) =
+                                    device.encoder_utilization()
+                                {
+                                    let enc_util = enc_usage.utilization;
+                                    if let Ok(dec_usage) =
+                                        device.decoder_utilization()
+                                    {
+                                        let dec_util = dec_usage.utilization;
+                                        gpu_vec.push((
+                                            name.clone(),
+                                            GpuStats {
+                                                gpu_util,
+                                                enc_util,
+                                                dec_util,
+                                            },
+                                        ));
+                                    }
+                                }
+                            }
                             if let Ok(mem) = device.memory_info() {
-                                if let Some(total_bytes) = NonZeroU64::new(mem.total) {
+                                if let Some(total_bytes) =
+                                    NonZeroU64::new(mem.total)
+                                {
                                     mem_vec.push((
                                         name.clone(),
                                         MemData {
@@ -73,7 +109,9 @@ pub fn get_nvidia_vecs(
                         if widgets_to_harvest.use_temp
                             && Filter::optional_should_keep(filter, &name)
                         {
-                            if let Ok(temperature) = device.temperature(TemperatureSensor::Gpu) {
+                            if let Ok(temperature) =
+                                device.temperature(TemperatureSensor::Gpu)
+                            {
                                 temp_vec.push(TempSensorData {
                                     name,
                                     temperature: Some(temperature as f32),
@@ -90,15 +128,21 @@ pub fn get_nvidia_vecs(
                     if widgets_to_harvest.use_proc {
                         let mut procs = HashMap::new();
 
-                        if let Ok(gpu_procs) = device.process_utilization_stats(None) {
+                        if let Ok(gpu_procs) =
+                            device.process_utilization_stats(None)
+                        {
                             for proc in gpu_procs {
                                 let pid = proc.pid;
-                                let gpu_util = proc.sm_util + proc.enc_util + proc.dec_util;
+                                let gpu_util = proc.sm_util
+                                    + proc.enc_util
+                                    + proc.dec_util;
                                 procs.insert(pid, (0, gpu_util));
                             }
                         }
 
-                        if let Ok(compute_procs) = device.running_compute_processes() {
+                        if let Ok(compute_procs) =
+                            device.running_compute_processes()
+                        {
                             for proc in compute_procs {
                                 let pid = proc.pid;
                                 let gpu_mem = match proc.used_gpu_memory {
@@ -114,7 +158,9 @@ pub fn get_nvidia_vecs(
                         }
 
                         // Use the legacy API too but prefer newer API results
-                        if let Ok(graphics_procs) = device.running_graphics_processes_v2() {
+                        if let Ok(graphics_procs) =
+                            device.running_graphics_processes_v2()
+                        {
                             for proc in graphics_procs {
                                 let pid = proc.pid;
                                 let gpu_mem = match proc.used_gpu_memory {
@@ -129,7 +175,9 @@ pub fn get_nvidia_vecs(
                             }
                         }
 
-                        if let Ok(graphics_procs) = device.running_graphics_processes() {
+                        if let Ok(graphics_procs) =
+                            device.running_graphics_processes()
+                        {
                             for proc in graphics_procs {
                                 let pid = proc.pid;
                                 let gpu_mem = match proc.used_gpu_memory {
@@ -169,6 +217,11 @@ pub fn get_nvidia_vecs(
                 },
                 procs: if !proc_vec.is_empty() {
                     Some((total_mem, proc_vec))
+                } else {
+                    None
+                },
+                gpu_stats: if !gpu_vec.is_empty() {
+                    Some(gpu_vec)
                 } else {
                     None
                 },

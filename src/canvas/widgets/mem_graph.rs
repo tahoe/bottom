@@ -10,7 +10,9 @@ use crate::{
     app::{App, data::Values},
     canvas::{
         Painter,
-        components::time_graph::{GraphData, variants::percent::PercentTimeGraph},
+        components::time_graph::{
+            GraphData, variants::percent::PercentTimeGraph,
+        },
         drawing_utils::should_hide_x_label,
     },
     collection::memory::MemData,
@@ -36,8 +38,9 @@ fn memory_legend_label(name: &str, data: Option<&MemData>) -> String {
 /// Get graph data.
 #[inline]
 fn graph_data<'a>(
-    out: &mut Vec<GraphData<'a>>, name: &str, last_harvest: Option<&'a MemData>,
-    time: &'a [Instant], values: &'a Values, style: Style,
+    out: &mut Vec<GraphData<'a>>, name: &str,
+    last_harvest: Option<&'a MemData>, time: &'a [Instant], values: &'a Values,
+    style: Style,
 ) {
     if !values.no_elements() {
         let label = memory_legend_label(name, last_harvest).into();
@@ -54,9 +57,12 @@ fn graph_data<'a>(
 
 impl Painter {
     pub fn draw_memory_graph(
-        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect, widget_id: u64,
+        &self, f: &mut Frame<'_>, app_state: &mut App, draw_loc: Rect,
+        widget_id: u64,
     ) {
-        if let Some(mem_state) = app_state.states.mem_state.widget_states.get_mut(&widget_id) {
+        if let Some(mem_state) =
+            app_state.states.mem_state.widget_states.get_mut(&widget_id)
+        {
             let hide_x_labels = should_hide_x_label(
                 app_state.app_config_fields.hide_time,
                 app_state.app_config_fields.autohide_time,
@@ -67,7 +73,8 @@ impl Painter {
                 let mut size = 1;
                 let data = app_state.data_store.get_data();
 
-                // TODO: is this optimization really needed...? This just pre-allocates a vec, but it'll probably never
+                // TODO: is this optimization really needed...?
+                // This just pre-allocates a vec, but it'll probably never
                 // be that big...
 
                 if data.swap_harvest.is_some() {
@@ -88,7 +95,8 @@ impl Painter {
                 let timeseries = &data.timeseries_data;
                 let time = &timeseries.time;
 
-                // TODO: Add a "no data" option here/to time graph if there is no entries
+                // TODO: Add a "no data" option here/to time graph if
+                // there is no entries
                 graph_data(
                     &mut points,
                     "RAM",
@@ -131,18 +139,31 @@ impl Painter {
                     );
                 }
 
+                // PRINT GPU INFO IN MEM window
+                // commenting the below scope removes it from the memory
+                // area sub display
+                // TODO for dennis
                 #[cfg(feature = "gpu")]
                 {
                     let mut colour_index = 0;
                     let gpu_styles = &self.styles.gpu_colours;
 
                     for (name, harvest) in &data.gpu_harvest {
-                        if let Some(gpu_data) = data.timeseries_data.gpu_mem.get(name) {
+                        // gpu_data has the gpu memory usage from a timeseries
+                        if let Some(gpu_data) =
+                            data.timeseries_data.gpu_mem.get(name)
+                        {
+                            // harvest has the used/total gpu memory
+                            // eprint!(
+                            //     "***************** {:?} *******************",
+                            //     harvest
+                            // );
                             let style = {
                                 if gpu_styles.is_empty() {
                                     Style::default()
                                 } else {
-                                    let colour = gpu_styles[colour_index % gpu_styles.len()];
+                                    let colour = gpu_styles
+                                        [colour_index % gpu_styles.len()];
                                     colour_index += 1;
 
                                     colour
@@ -173,8 +194,13 @@ impl Painter {
                 title: " Memory ".into(),
                 styles: &self.styles,
                 widget_id,
-                legend_position: app_state.app_config_fields.memory_legend_position,
-                legend_constraints: Some((Constraint::Ratio(3, 4), Constraint::Ratio(3, 4))),
+                legend_position: app_state
+                    .app_config_fields
+                    .memory_legend_position,
+                legend_constraints: Some((
+                    Constraint::Ratio(3, 4),
+                    Constraint::Ratio(3, 4),
+                )),
             }
             .build()
             .draw(f, draw_loc, graph_data);
@@ -184,8 +210,10 @@ impl Painter {
             // Update draw loc in widget map
             if let Some(widget) = app_state.widget_map.get_mut(&widget_id) {
                 widget.top_left_corner = Some((draw_loc.x, draw_loc.y));
-                widget.bottom_right_corner =
-                    Some((draw_loc.x + draw_loc.width, draw_loc.y + draw_loc.height));
+                widget.bottom_right_corner = Some((
+                    draw_loc.x + draw_loc.width,
+                    draw_loc.y + draw_loc.height,
+                ));
             }
         }
     }

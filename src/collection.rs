@@ -56,6 +56,7 @@ pub struct Data {
     pub arc: Option<memory::MemData>,
     #[cfg(feature = "gpu")]
     pub gpu: Option<Vec<(String, memory::MemData)>>,
+    pub gpu_stats: Option<Vec<(String, nvidia::GpuStats)>>,
 }
 
 impl Default for Data {
@@ -79,6 +80,8 @@ impl Default for Data {
             arc: None,
             #[cfg(feature = "gpu")]
             gpu: None,
+            #[cfg(feature = "gpu")]
+            gpu_stats: None,
         }
     }
 }
@@ -383,6 +386,7 @@ impl DataCollector {
     fn update_gpus(&mut self) {
         if self.widgets_to_harvest.use_gpu {
             let mut local_gpu: Vec<(String, memory::MemData)> = Vec::new();
+            let mut local_gpu_stats: Vec<(String, nvidia::GpuStats)> = Vec::new();
             let mut local_gpu_pids: Vec<HashMap<u32, (u64, u32)>> = Vec::new();
             let mut local_gpu_total_mem: u64 = 0;
 
@@ -404,6 +408,9 @@ impl DataCollector {
                     local_gpu_pids.append(&mut proc.1);
                     local_gpu_total_mem += proc.0;
                 }
+                if let Some(mut gpustats) = data.gpu_stats {
+                    local_gpu_stats.append(&mut gpustats);
+                }
             }
 
             #[cfg(target_os = "linux")]
@@ -420,6 +427,7 @@ impl DataCollector {
             }
 
             self.data.gpu = (!local_gpu.is_empty()).then_some(local_gpu);
+            self.data.gpu_stats = (!local_gpu_stats.is_empty()).then_some(local_gpu_stats);
             self.gpu_pids = (!local_gpu_pids.is_empty()).then_some(local_gpu_pids);
             self.gpus_total_mem = (local_gpu_total_mem > 0).then_some(local_gpu_total_mem);
         }
